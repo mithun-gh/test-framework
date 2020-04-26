@@ -3,24 +3,40 @@ export function render(template: Template, selector: string) {
   if (element === null) {
     throw new Error(`Invalid selector: ${selector}`);
   }
-  element.insertAdjacentHTML("afterbegin", template.getHtml());
+  const templateElement = template.getTemplateElement();
+  element.appendChild(templateElement.content.cloneNode(true));
+}
+
+interface EventHandler {
+  type: string;
+  handler: EventListener;
 }
 
 class Template {
+  private eventHandlers: Array<EventHandler>;
+
+  private readonly eventNamePattern: RegExp = /(on[a-z]+)\s*=$/;
   private readonly strings: TemplateStringsArray;
   private readonly values: readonly unknown[];
 
   constructor(strings: TemplateStringsArray, values: readonly unknown[]) {
     this.strings = strings;
     this.values = values;
+    this.eventHandlers = [];
   }
 
-  getHtml(): string {
+  getTemplateElement(): HTMLTemplateElement {
+    const template = document.createElement("template");
+    template.innerHTML = this.getHtml();
+    return template;
+  }
+
+  private getHtml(): string {
     let html = "";
 
-    this.strings.forEach((s: unknown, i: number) => {
+    this.strings.forEach((s: string, i: number) => {
       const v = this.values[i];
-      html += s + this.transform(v);
+      html += this.transform(v, s);
     });
 
     return html;
@@ -34,25 +50,26 @@ class Template {
       .replace(/"/g, "&quot;");
   }
 
-  private transform(value: unknown): string {
+  private transform(value: unknown, substring: string): string {
     if (Array.isArray(value)) {
-      return value.map((v) => this.transform(v)).join("");
+      return substring + value.map((v) => this.transform(v, "")).join("");
     }
 
     if (value instanceof Template) {
-      return value.getHtml();
+      return substring + value.getHtml();
     }
 
     if (typeof value === "function") {
-      const fn = value.toString().replace(/"/g, "'");
-      return `"(${fn})(event)"`;
+      const type = substring.match(this.eventNamePattern)?.[1];
+      this.eventHandlers.push({ type, handler: value as EventListener });
+      return substring.replace(this.eventNamePattern, "");
     }
 
     if (value != null) {
-      return this.escape(value.toString());
+      return substring + this.escape(value.toString());
     }
 
-    return "";
+    return substring;
   }
 }
 
