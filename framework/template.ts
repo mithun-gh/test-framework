@@ -15,7 +15,7 @@ interface EventHandler {
 class Template {
   private eventHandlers: Array<EventHandler>;
 
-  private readonly eventNamePattern: RegExp = /(on[a-z]+)\s*=$/;
+  private readonly eventNamePattern: RegExp = /on([a-z]+)\s*=$/;
   private readonly strings: TemplateStringsArray;
   private readonly values: readonly unknown[];
 
@@ -60,9 +60,11 @@ class Template {
     }
 
     if (typeof value === "function") {
-      const type = substring.match(this.eventNamePattern)?.[1];
+      const result = substring.match(this.eventNamePattern);
+      const attr = result?.[0];
+      const type = result?.[1];
       this.eventHandlers.push({ type, handler: value as EventListener });
-      return substring.replace(this.eventNamePattern, "");
+      return substring.replace(attr, "");
     }
 
     if (value != null) {
