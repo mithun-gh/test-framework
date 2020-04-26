@@ -8,14 +8,12 @@ function NameItem(name: string) {
 
 function NameList(names: string[]) {
   const listItems = names.map((name) => NameItem(name));
-  const testFn = (e) => console.log(">>>", e);
   return html`
     <b>Greetings:</b>
     <ul>
       ${listItems}
     </ul>
-    <button type="button" onclick=${testFn}>Click Me!</button>
-    <button type="button" onclick=${(e) => console.log(e)}>Click Me!!</button>
+    <button onclick=${() => console.log("CLICKED!")}>Click Me!</button>
   `;
 }
 

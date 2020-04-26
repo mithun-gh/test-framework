@@ -3,17 +3,11 @@ export function render(template: Template, selector: string) {
   if (element === null) {
     throw new Error(`Invalid selector: ${selector}`);
   }
-  const templateElement = template.getTemplateElement();
-  element.appendChild(templateElement.content.cloneNode(true));
-}
-
-interface EventHandler {
-  type: string;
-  handler: EventListener;
+  element.appendChild(template.getTemplateInstance());
 }
 
 class Template {
-  private eventHandlers: Array<EventHandler>;
+  private eventHandlers: Array<EventListener>;
 
   private readonly eventNamePattern: RegExp = /on([a-z]+)\s*=$/;
   private readonly strings: TemplateStringsArray;
@@ -25,7 +19,25 @@ class Template {
     this.eventHandlers = [];
   }
 
-  getTemplateElement(): HTMLTemplateElement {
+  getTemplateInstance(): Node {
+    const template = this.getTemplateElement();
+    const instance = document.importNode(template.content, true);
+
+    instance
+      .querySelectorAll("[___event___]")
+      .forEach((element: HTMLElement) => {
+        element.removeAttribute("___event___");
+        Object.entries(element.dataset).forEach((entry) => {
+          const [event, id] = entry;
+          element.removeAttribute(`data-${event}`);
+          element.addEventListener(event, this.eventHandlers[id]);
+        });
+      });
+
+    return instance;
+  }
+
+  private getTemplateElement(): HTMLTemplateElement {
     const template = document.createElement("template");
     template.innerHTML = this.getHtml();
     return template;
@@ -63,8 +75,9 @@ class Template {
       const result = substring.match(this.eventNamePattern);
       const attr = result?.[0];
       const type = result?.[1];
-      this.eventHandlers.push({ type, handler: value as EventListener });
-      return substring.replace(attr, "");
+      const id = this.eventHandlers.length;
+      this.eventHandlers.push(value as EventListener);
+      return substring.replace(attr, "") + `___event___ data-${type}="${id}"`;
     }
 
     if (value != null) {
