@@ -55,6 +55,10 @@ class Template {
   }
 
   private escape(html: string): string {
+    if (html === "") {
+      return `""`;
+    }
+
     return html
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")

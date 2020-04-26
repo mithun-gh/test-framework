@@ -1,20 +1,46 @@
 import { html, render } from "../framework/template";
 
-const Greeter = (name: string) => html`Hello, <b>${name}</b>!`;
-
-function NameItem(name: string) {
-  return html`<li>${Greeter(name)}</li>`;
+function Greeter(name: string) {
+  return html`<h2>Hello, ${name}!</h2>`;
 }
 
-function NameList(names: string[]) {
-  const listItems = names.map((name) => NameItem(name));
+function TodoApp() {
+  let text: string = "";
+  let items: string[] = [];
+
+  const handleChange = (e: Event) => {
+    text = (e.target as any).value;
+  };
+
+  const handleSubmit = (e: Event) => {
+    e.preventDefault();
+    if (text.length === 0) {
+      return;
+    }
+
+    // TODO: Add Observable support
+    items.push(text);
+    text = "";
+  };
+
   return html`
-    <b>Greetings:</b>
-    <ul>
-      ${listItems}
-    </ul>
-    <button onclick=${() => console.log("CLICKED!")}>Click Me!</button>
+    ${Greeter("world")}
+    <h3>TODO</h3>
+    <form onsubmit=${handleSubmit}>
+      <label for="new-todo">What needs to be done?</label>
+      <input id="new-todo" onchange=${handleChange} value=${text} />
+      <button>Add #${items.length + 1}</button>
+    </form>
+    ${TodoList(items)}
   `;
 }
 
-render(NameList(["Adam", "Ben", "Charles"]), "#root");
+function TodoList(items: string[]) {
+  return html`
+    <ul>
+      ${items.map((item) => html`<li>${item}</li>`)}
+    </ul>
+  `;
+}
+
+render(TodoApp(), "#root");
