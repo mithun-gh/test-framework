@@ -6,7 +6,7 @@ export function render(template: Template, selector: string) {
   element.appendChild(template.getTemplateInstance());
 }
 
-class Template {
+export class Template {
   private eventHandlers: Array<EventListener>;
 
   private readonly eventNamePattern: RegExp = /on([a-z]+)\s*=$/;

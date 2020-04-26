@@ -1,7 +1,25 @@
 import { html, render } from "../framework/template";
+import { Component, Property } from "../framework/component";
 
-function Greeter(name: string) {
-  return html`<h2>Hello, ${name}!</h2>`;
+/*
+@Component("my-greeter")
+class GreeterComponent {
+  @Property name: string;
+
+  render() {
+    return html`<h2>Hello, ${this.name}!</h2>`;
+  }
+}
+*/
+
+@Component("test-greeter")
+class TestGreeter {
+  @Property name: string;
+  @Property age: number;
+
+  render() {
+    return html`<h1>Hello, ${this.name}!</h1>`;
+  }
 }
 
 function TodoApp() {
@@ -24,7 +42,7 @@ function TodoApp() {
   };
 
   return html`
-    ${Greeter("world")}
+    <test-greeter name="Mithun"></test-greeter>
     <h3>TODO</h3>
     <form onsubmit=${handleSubmit}>
       <label for="new-todo">What needs to be done?</label>
