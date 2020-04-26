@@ -1,4 +1,4 @@
-import { html, render } from "../framework/html-template";
+import { html, render } from "../framework/template";
 
 const Greeter = (name: string) => html`Hello, <b>${name}</b>!`;
 
@@ -8,11 +8,14 @@ function NameItem(name: string) {
 
 function NameList(names: string[]) {
   const listItems = names.map((name) => NameItem(name));
+  const testFn = (e) => console.log(">>>", e);
   return html`
-    <p>Greetings:</p>
+    <b>Greetings:</b>
     <ul>
       ${listItems}
     </ul>
+    <button type="button" onclick=${testFn}>Click Me!</button>
+    <button type="button" onclick=${(e) => console.log(e)}>Click Me!!</button>
   `;
 }
 

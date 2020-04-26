@@ -43,6 +43,11 @@ function transform(value: unknown): string {
     return value.html;
   }
 
+  if (typeof value === "function") {
+    const fn = value.toString().replace(/"/g, "'");
+    return `"(${fn})(event)"`;
+  }
+
   if (value != null) {
     return escape(value.toString());
   }
