@@ -10,8 +10,8 @@ export class Template {
   private eventHandlers: Array<EventListener>;
 
   private readonly eventNamePattern: RegExp = /on([a-z]+)\s*=$/;
-  private readonly strings: TemplateStringsArray;
-  private readonly values: readonly unknown[];
+  readonly strings: TemplateStringsArray;
+  readonly values: readonly unknown[];
 
   constructor(strings: TemplateStringsArray, values: readonly unknown[]) {
     this.strings = strings;
@@ -44,12 +44,28 @@ export class Template {
   }
 
   private getHtml(): string {
-    let html = "";
+    /* let html = "";
 
     this.strings.forEach((s: string, i: number) => {
       const v = this.values[i];
       html += this.transform(v, s);
-    });
+    }); */
+
+    /* let html = "";
+    let values = [];
+    this.strings.forEach((s: string, i: number) => {
+      const v = this.values[i];
+      const [substring, value] = transform(s, v);
+      html += substring;
+      if (value) {
+        values.push(value);
+      }
+    }); */
+
+    let html = getHtml(this.strings, this.values);
+
+    console.log(html);
+    console.log(values);
 
     return html;
   }
@@ -66,7 +82,7 @@ export class Template {
       .replace(/"/g, "&quot;");
   }
 
-  private transform(value: unknown, substring: string): string {
+  /* private transform(value: unknown, substring: string): string {
     if (Array.isArray(value)) {
       return substring + value.map((v) => this.transform(v, "")).join("");
     }
@@ -89,8 +105,35 @@ export class Template {
     }
 
     return substring;
-  }
+  } */
 }
 
 export const html = (strings: TemplateStringsArray, ...values: unknown[]) =>
   new Template(strings, values);
+
+const values: unknown[] = [];
+
+function getHtml(str: TemplateStringsArray, val: readonly unknown[]): string {
+  if (str === null) {
+    return val.reduce((h, v) => h + transform(v), "") as string;
+  } else {
+    return str.reduce((h, s, i) => h + s + transform(val[i]), "");
+  }
+}
+
+function transform(val: unknown): string {
+  if (val instanceof Template) {
+    return getHtml(val.strings, val.values);
+  }
+
+  if (Array.isArray(val)) {
+    return getHtml(null, val);
+  }
+
+  if (val != null) {
+    values.push(val);
+    return "[/#/]"; // TODO: Make it random for security
+  }
+
+  return "";
+}

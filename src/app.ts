@@ -1,25 +1,43 @@
 import { html, render } from "../framework/template";
 import { Component, Property } from "../framework/component";
 
-/*
 @Component("my-greeter")
-class GreeterComponent {
-  @Property name: string;
-
-  render() {
-    return html`<h2>Hello, ${this.name}!</h2>`;
-  }
-}
-*/
-
-@Component("test-greeter")
-class TestGreeter {
-  @Property name: string;
-  @Property age: number;
+class MyGreeter {
+  @Property name: string = "";
+  @Property age: number = 31;
 
   render() {
     return html`<h1>Hello, ${this.name}!</h1>`;
   }
+}
+
+/* render(html` <my-greeter name="Mithun"></my-greeter> `, "#root"); */
+
+/*
+@Component("todo-list")
+class TodoList {
+  @Property items: string[] = [];
+
+  render() {
+    return html`
+      <ul>
+        ${this.items.map((item) => html`<li>${item}</li>`)}
+      </ul>
+    `;
+  }
+}
+*/
+
+function Greeter(name: string) {
+  return html`<h1>Hello, ${name}!</h1>`;
+}
+
+function TodoList(items: string[]) {
+  return html`
+    <ul>
+      ${items.map((item) => html`<li>${item}</li>`)}
+    </ul>
+  `;
 }
 
 function TodoApp() {
@@ -41,8 +59,21 @@ function TodoApp() {
     text = "";
   };
 
+  const nums = ["One", "Two", "Three", "Four"];
+
+  const dummy = () => html`<p>DUMMY</p>`;
+
+  /* return html`
+    <h2>HELLO</h2>
+    ${dummy()}
+    <ul>
+      ${nums.map((n) => html`<li>${n}</li>`)}
+    </ul>
+  `; */
+
   return html`
-    <test-greeter name="Mithun"></test-greeter>
+    <my-greeter name="huh"></my-greeter>
+    ${Greeter("Mithun")}
     <h3>TODO</h3>
     <form onsubmit=${handleSubmit}>
       <label for="new-todo">What needs to be done?</label>
@@ -50,14 +81,6 @@ function TodoApp() {
       <button>Add #${items.length + 1}</button>
     </form>
     ${TodoList(items)}
-  `;
-}
-
-function TodoList(items: string[]) {
-  return html`
-    <ul>
-      ${items.map((item) => html`<li>${item}</li>`)}
-    </ul>
   `;
 }
 

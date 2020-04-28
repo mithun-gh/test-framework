@@ -18,7 +18,7 @@ export const Component = (tagName: string) => <T extends Constructor>(
 
   const element = class extends HTMLElement {
     connectedCallback() {
-      this.render();
+      // this.render();
     }
 
     render() {
@@ -33,7 +33,7 @@ export const Component = (tagName: string) => <T extends Constructor>(
 
     attributeChangedCallback(name, oldValue, newValue) {
       component[name] = newValue;
-      this.render();
+      // this.render();
     }
   };
 
