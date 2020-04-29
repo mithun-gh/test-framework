@@ -25,18 +25,34 @@ export class Template {
     const template = this.getTemplateElement();
     const instance = document.importNode(template.content, true);
 
-    /* instance
-      .querySelectorAll("[___event___]")
-      .forEach((element: HTMLElement) => {
-        element.removeAttribute("___event___");
-        Object.entries(element.dataset).forEach((entry) => {
-          const [event, id] = entry;
-          element.removeAttribute(`data-${event}`);
-          element.addEventListener(event, this.eventHandlers[id]);
-        });
-      }); */
+    this.execReplacer(instance, "[___event___]", "event", (elem, key, id) => {
+      elem.addEventListener(key, this.flatValues[id]);
+    });
+
+    this.execReplacer(instance, "[___attr___]", "attr", (elem, key, id) => {
+      elem[key] = this.flatValues[id];
+    });
 
     return instance;
+  }
+
+  private execReplacer(
+    instance: DocumentFragment,
+    marker: string,
+    replacerType: string,
+    cb: Function
+  ) {
+    instance.querySelectorAll(marker).forEach((element: HTMLElement) => {
+      element.removeAttribute(marker);
+      Object.entries(element.dataset).forEach((entry) => {
+        const [key, value] = entry;
+        const [type, id] = value.split(":");
+        if (type === replacerType) {
+          element.removeAttribute(`data-${key}`);
+          cb(element, key, id);
+        }
+      });
+    });
   }
 
   private getTemplateElement(): HTMLTemplateElement {

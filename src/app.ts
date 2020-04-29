@@ -41,7 +41,7 @@ function TodoList(items: string[]) {
 }
 
 function TodoApp() {
-  let text: string = "";
+  let text: string = "huh?";
   let items: string[] = [];
 
   const handleChange = (e: Event) => {
@@ -63,25 +63,26 @@ function TodoApp() {
 
   const dummy = () => html`<p>DUMMY</p>`;
 
-  /* return html`
+  return html`
     <h2>HELLO</h2>
     ${dummy()}
     <ul>
       ${nums.map((n) => html`<li>${n}</li>`)}
     </ul>
-  `; */
-
-  return html`
-    <my-greeter name="huh"></my-greeter>
-    ${Greeter("Mithun")}
-    <h3>TODO</h3>
-    <form onsubmit=${handleSubmit}>
-      <label for="new-todo">What needs to be done?</label>
-      <input id="new-todo" onchange=${handleChange} value=${text} />
-      <button>Add #${items.length + 1}</button>
-    </form>
-    ${TodoList(items)}
+    <button type=${"button"} onclick=${(e) => alert("Hola!")}>Click Me!</button>
   `;
+
+  // return html`
+  //   <my-greeter name="huh"></my-greeter>
+  //   ${Greeter("Mithun")}
+  //   <h3>TODO</h3>
+  //   <form onsubmit=${handleSubmit}>
+  //     <label for="new-todo">What needs to be done?</label>
+  //     <input id="new-todo" onchange=${handleChange} value=${text} />
+  //     <button>Add #${items.length + 1}</button>
+  //   </form>
+  //   ${TodoList(items)}
+  // `;
 }
 
 render(TodoApp(), "#root");
