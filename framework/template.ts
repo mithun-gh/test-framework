@@ -7,23 +7,25 @@ export function render(template: Template, selector: string) {
 }
 
 export class Template {
-  private eventHandlers: Array<EventListener>;
+  private flatValues: unknown[] = [];
 
-  private readonly eventNamePattern: RegExp = /on([a-z]+)\s*=$/;
+  private readonly strPattern: RegExp = /___\$\$mfr\(([0-9])+\)/g;
+  private readonly attrPattern: RegExp = /([a-z]+)\s*=\s*___\$\$mfr\(([0-9]+)\)/g;
+  private readonly eventPattern: RegExp = /on([a-z]+)\s*=\s*___\$\$mfr\(([0-9]+)\)/g;
+
   readonly strings: TemplateStringsArray;
   readonly values: readonly unknown[];
 
   constructor(strings: TemplateStringsArray, values: readonly unknown[]) {
     this.strings = strings;
     this.values = values;
-    this.eventHandlers = [];
   }
 
   getTemplateInstance(): Node {
     const template = this.getTemplateElement();
     const instance = document.importNode(template.content, true);
 
-    instance
+    /* instance
       .querySelectorAll("[___event___]")
       .forEach((element: HTMLElement) => {
         element.removeAttribute("___event___");
@@ -32,7 +34,7 @@ export class Template {
           element.removeAttribute(`data-${event}`);
           element.addEventListener(event, this.eventHandlers[id]);
         });
-      });
+      }); */
 
     return instance;
   }
@@ -44,30 +46,52 @@ export class Template {
   }
 
   private getHtml(): string {
-    /* let html = "";
+    let html = this.getProcessedHtml(this.strings, this.values);
 
-    this.strings.forEach((s: string, i: number) => {
-      const v = this.values[i];
-      html += this.transform(v, s);
-    }); */
+    // process event handlers
+    html = html.replace(this.eventPattern, (_, event, id) => {
+      return `___event___ data-${event}="event:${id}"`;
+    });
 
-    /* let html = "";
-    let values = [];
-    this.strings.forEach((s: string, i: number) => {
-      const v = this.values[i];
-      const [substring, value] = transform(s, v);
-      html += substring;
-      if (value) {
-        values.push(value);
-      }
-    }); */
+    // process attributes
+    html = html.replace(this.attrPattern, (_, attr, id) => {
+      return `___attr___ data-${attr}="attr:${id}"`;
+    });
 
-    let html = getHtml(this.strings, this.values);
-
-    console.log(html);
-    console.log(values);
+    // process strings
+    html = html.replace(this.strPattern, (_, id) => {
+      return this.escape(this.flatValues[id].toString());
+    });
 
     return html;
+  }
+
+  private getProcessedHtml(
+    str: TemplateStringsArray,
+    val: readonly unknown[]
+  ): string {
+    if (str === null) {
+      return val.reduce((h, v) => h + this.transform(v), "") as string;
+    } else {
+      return str.reduce((h, s, i) => h + s + this.transform(val[i]), "");
+    }
+  }
+
+  private transform(val: unknown): string {
+    if (val instanceof Template) {
+      return this.getProcessedHtml(val.strings, val.values);
+    }
+
+    if (Array.isArray(val)) {
+      return this.getProcessedHtml(null, val);
+    }
+
+    if (val != null) {
+      this.flatValues.push(val);
+      return `___$$mfr(${this.flatValues.length - 1})`;
+    }
+
+    return "";
   }
 
   private escape(html: string): string {
@@ -81,59 +105,7 @@ export class Template {
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;");
   }
-
-  /* private transform(value: unknown, substring: string): string {
-    if (Array.isArray(value)) {
-      return substring + value.map((v) => this.transform(v, "")).join("");
-    }
-
-    if (value instanceof Template) {
-      return substring + value.getHtml();
-    }
-
-    if (typeof value === "function") {
-      const result = substring.match(this.eventNamePattern);
-      const attr = result?.[0];
-      const type = result?.[1];
-      const id = this.eventHandlers.length;
-      this.eventHandlers.push(value as EventListener);
-      return substring.replace(attr, "") + `___event___ data-${type}="${id}"`;
-    }
-
-    if (value != null) {
-      return substring + this.escape(value.toString());
-    }
-
-    return substring;
-  } */
 }
 
 export const html = (strings: TemplateStringsArray, ...values: unknown[]) =>
   new Template(strings, values);
-
-const values: unknown[] = [];
-
-function getHtml(str: TemplateStringsArray, val: readonly unknown[]): string {
-  if (str === null) {
-    return val.reduce((h, v) => h + transform(v), "") as string;
-  } else {
-    return str.reduce((h, s, i) => h + s + transform(val[i]), "");
-  }
-}
-
-function transform(val: unknown): string {
-  if (val instanceof Template) {
-    return getHtml(val.strings, val.values);
-  }
-
-  if (Array.isArray(val)) {
-    return getHtml(null, val);
-  }
-
-  if (val != null) {
-    values.push(val);
-    return "[/#/]"; // TODO: Make it random for security
-  }
-
-  return "";
-}
