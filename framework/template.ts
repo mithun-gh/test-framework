@@ -77,16 +77,23 @@ export class Template {
     let html = this.getProcessedHtml(this.strings, this.values);
 
     // process event handlers
+    // ___event___ marker is needed because, without it, querying
+    // all the elements that have event bindings will be impossible/difficult.
+    // For example, if elements just had attributes like data-click="event:<id>",
+    // then we need to query those elements multiple times with multiple queries
+    // like [data-click], [data-mouseover] etc
     html = html.replace(this.eventPattern, (_, event, id) => {
       return `___event___ data-${event}="event:${id}"`;
     });
 
     // process attributes
+    // ___attr___ marker is required for the same reason as ___event___
     html = html.replace(this.attrPattern, (_, attr, id) => {
       return `___attr___ data-${attr}="attr:${id}"`;
     });
 
     // process strings
+    // escape the strings, they might have illegal HTML
     html = html.replace(this.strPattern, (_, id) => {
       return this.escape(this.flatValues[id].toString());
     });
@@ -94,6 +101,7 @@ export class Template {
     return html;
   }
 
+  // recursively flatten the nested strings and values
   private getProcessedHtml(
     str: TemplateStringsArray,
     val: readonly unknown[]
@@ -113,6 +121,9 @@ export class Template {
       return this.getProcessedHtml(val.strings, val.values);
     }
 
+    // if an array has isAttr flag set, then
+    // it should be treated as a data.
+    // or else, recursively flatten out the array
     if (Array.isArray(val) && !isAttr) {
       return this.getProcessedHtml(null, val);
     }

@@ -10,18 +10,24 @@ class MyGreeter {
   }
 }
 
-const p = {
-  alt: "logo",
-  width: 150,
-  class: "main-logo",
-  src: "https://resources.whatwg.org/logo.svg",
+const data = {
+  name: "Mithun",
+  onclick: (e) => {
+    console.log(e);
+  },
+  items: ["<b>One</b>", "Two", "Three"],
 };
 
-const test = html`<img
-  alt=${p.alt}
-  width=${p.width}
-  class=${p.class}
-  src=${p.src}
-/>`;
+const template = html`
+  <h4>Hello, ${data.name}!</h4>
+  <input type="text" />
+  <input type="button" value="Click Me!" onclick=${data.onclick} />
+  <p>
+    Check the following items:
+    <ul>
+      ${data.items.map((item) => html`<li>${item}</li>`)}
+    </ul>
+  </p>
+`;
 
-render(test, "#root");
+render(template, "#root");
