@@ -1,14 +1,19 @@
-export function render(template: Template, selector: string) {
-  const element = document.querySelector(selector);
-  if (element === null) {
-    throw new Error(`Invalid selector: ${selector}`);
+export function render(template: Template, queryOrElem: string | Element) {
+  if (queryOrElem instanceof Element) {
+    queryOrElem.appendChild(template.getTemplateInstance());
+  } else {
+    const element = document.querySelector(queryOrElem);
+    if (element === null) {
+      throw new Error(`Invalid selector: ${queryOrElem}`);
+    }
+    element.appendChild(template.getTemplateInstance());
   }
-  element.appendChild(template.getTemplateInstance());
 }
 
 export class Template {
   private flatValues: unknown[] = [];
 
+  private readonly isAttr: RegExp = /[a-z]+\s*=$/;
   private readonly strPattern: RegExp = /___\$\$mfr\(([0-9])+\)/g;
   private readonly attrPattern: RegExp = /([a-z]+)\s*=\s*___\$\$mfr\(([0-9]+)\)/g;
   private readonly eventPattern: RegExp = /on([a-z]+)\s*=\s*___\$\$mfr\(([0-9]+)\)/g;
@@ -25,15 +30,22 @@ export class Template {
     const template = this.getTemplateElement();
     const instance = document.importNode(template.content, true);
 
-    this.execReplacer(instance, "[___event___]", "event", (elem, key, id) => {
+    this.execReplacer(instance, "___event___", "event", (elem, key, id) => {
       elem.addEventListener(key, this.flatValues[id]);
     });
 
-    this.execReplacer(instance, "[___attr___]", "attr", (elem, key, id) => {
-      elem[key] = this.flatValues[id];
+    this.execReplacer(instance, "___attr___", "attr", (elem, key, id) => {
+      elem[this.preprocessKey(key)] = this.flatValues[id];
     });
 
     return instance;
+  }
+
+  private preprocessKey(key: string): string {
+    if (key === "class") {
+      return "className";
+    }
+    return key;
   }
 
   private execReplacer(
@@ -42,7 +54,7 @@ export class Template {
     replacerType: string,
     cb: Function
   ) {
-    instance.querySelectorAll(marker).forEach((element: HTMLElement) => {
+    instance.querySelectorAll(`[${marker}]`).forEach((element: HTMLElement) => {
       element.removeAttribute(marker);
       Object.entries(element.dataset).forEach((entry) => {
         const [key, value] = entry;
@@ -87,18 +99,21 @@ export class Template {
     val: readonly unknown[]
   ): string {
     if (str === null) {
-      return val.reduce((h, v) => h + this.transform(v), "") as string;
+      return val.reduce((h, v) => h + this.transform(v, false), "") as string;
     } else {
-      return str.reduce((h, s, i) => h + s + this.transform(val[i]), "");
+      return str.reduce(
+        (h, s, i) => h + s + this.transform(val[i], this.isAttr.test(s)),
+        ""
+      );
     }
   }
 
-  private transform(val: unknown): string {
+  private transform(val: unknown, isAttr: boolean): string {
     if (val instanceof Template) {
       return this.getProcessedHtml(val.strings, val.values);
     }
 
-    if (Array.isArray(val)) {
+    if (Array.isArray(val) && !isAttr) {
       return this.getProcessedHtml(null, val);
     }
 
