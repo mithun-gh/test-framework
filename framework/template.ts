@@ -95,8 +95,9 @@ export class Template {
 
     // process strings
     // escape the strings, they might have illegal HTML
-    html = html.replace(this.strPattern, (_, id) => {
-      return this.escape(this.data[id].toString());
+    html = html.replace(this.strPattern, (marker, id) => {
+      const value = this.data[id];
+      return this.escape(value?.toString() ?? marker);
     });
 
     return html;
