@@ -6,6 +6,7 @@ export function render(template: Template, queryOrElem: string | Element) {
     if (element === null) {
       throw new Error(`Invalid selector: ${queryOrElem}`);
     }
+    element.innerHTML = "";
     element.appendChild(template.getTemplateInstance());
   }
 }
@@ -14,7 +15,7 @@ export class Template {
   private flatValues: unknown[] = [];
 
   private readonly isAttr: RegExp = /[a-z]+\s*=$/;
-  private readonly strPattern: RegExp = /___\$\$mfr\(([0-9])+\)/g;
+  private readonly strPattern: RegExp = /___\$\$mfr\(([0-9]+)\)/g;
   private readonly attrPattern: RegExp = /([a-z]+)\s*=\s*___\$\$mfr\(([0-9]+)\)/g;
   private readonly eventPattern: RegExp = /on([a-z]+)\s*=\s*___\$\$mfr\(([0-9]+)\)/g;
 
