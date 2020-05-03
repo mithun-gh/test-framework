@@ -70,12 +70,12 @@ export class Template {
 
   private getTemplateElement(): HTMLTemplateElement {
     const template = document.createElement("template");
-    template.innerHTML = this.getHtml();
+    template.innerHTML = this.getProcessedHtml();
     return template;
   }
 
-  private getHtml(): string {
-    let html = this.getProcessedHtml(this.strings, this.values);
+  private getProcessedHtml(): string {
+    let html = this.getHtml(this.strings, this.values);
 
     // process event handlers
     // ___event___ marker is needed because, without it, querying
@@ -103,10 +103,7 @@ export class Template {
   }
 
   // recursively flatten the nested strings and values
-  private getProcessedHtml(
-    str: TemplateStringsArray,
-    val: readonly unknown[]
-  ): string {
+  private getHtml(str: TemplateStringsArray, val: readonly unknown[]): string {
     if (str === null) {
       return val.reduce((h, v) => h + this.transform(v, false), "") as string;
     } else {
@@ -119,14 +116,14 @@ export class Template {
 
   private transform(val: unknown, isAttr: boolean): string {
     if (val instanceof Template) {
-      return this.getProcessedHtml(val.strings, val.values);
+      return this.getHtml(val.strings, val.values);
     }
 
     // if an array has isAttr flag set, then
     // it should be treated as a data.
     // or else, recursively flatten out the array
     if (Array.isArray(val) && !isAttr) {
-      return this.getProcessedHtml(null, val);
+      return this.getHtml(null, val);
     }
 
     if (val != null) {
