@@ -12,7 +12,7 @@ export function render(template: Template, queryOrElem: string | Element) {
 }
 
 export class Template {
-  private flatValues: unknown[] = [];
+  private data: any = {};
 
   private readonly isAttr: RegExp = /[a-z]+\s*=$/;
   private readonly strPattern: RegExp = /___\$\$mfr\(([0-9]+)\)/g;
@@ -32,11 +32,11 @@ export class Template {
     const instance = document.importNode(template.content, true);
 
     this.execReplacer(instance, "___event___", "event", (elem, key, id) => {
-      elem.addEventListener(key, this.flatValues[id]);
+      elem.addEventListener(key, this.data[id]);
     });
 
     this.execReplacer(instance, "___attr___", "attr", (elem, key, id) => {
-      elem[this.preprocessKey(key)] = this.flatValues[id];
+      elem[this.preprocessKey(key)] = this.data[id];
     });
 
     return instance;
@@ -96,7 +96,7 @@ export class Template {
     // process strings
     // escape the strings, they might have illegal HTML
     html = html.replace(this.strPattern, (_, id) => {
-      return this.escape(this.flatValues[id].toString());
+      return this.escape(this.data[id].toString());
     });
 
     return html;
@@ -127,8 +127,9 @@ export class Template {
     }
 
     if (val != null) {
-      this.flatValues.push(val);
-      return `___$$mfr(${this.flatValues.length - 1})`;
+      const id = this.getId();
+      this.data[id] = val;
+      return `___$$mfr(${id})`;
     }
 
     return "";
@@ -144,6 +145,10 @@ export class Template {
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;");
+  }
+
+  private getId(): number {
+    return crypto.getRandomValues(new Uint32Array(1))[0];
   }
 }
 
