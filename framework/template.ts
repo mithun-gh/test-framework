@@ -149,7 +149,7 @@ export class Template {
   }
 
   private getId(): number {
-    return crypto.getRandomValues(new Uint32Array(1))[0];
+    return Math.ceil(Math.random() * Number.MAX_SAFE_INTEGER);
   }
 }
 
