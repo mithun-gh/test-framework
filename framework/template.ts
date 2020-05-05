@@ -1,3 +1,10 @@
+import {
+  eventPattern,
+  attrPattern,
+  strPattern,
+  isAttr,
+} from "./utils/regex-patterns";
+
 export function render(template: Template, queryOrElem: string | Element) {
   if (queryOrElem instanceof Element) {
     queryOrElem.appendChild(template.getTemplateInstance());
@@ -13,11 +20,6 @@ export function render(template: Template, queryOrElem: string | Element) {
 
 export class Template {
   private data: any = {};
-
-  private readonly isAttr: RegExp = /[a-z]+\s*=$/;
-  private readonly strPattern: RegExp = /___\$\$mfr\(([0-9]+)\)/g;
-  private readonly attrPattern: RegExp = /([a-z]+)\s*=\s*___\$\$mfr\(([0-9]+)\)/g;
-  private readonly eventPattern: RegExp = /on([a-z]+)\s*=\s*___\$\$mfr\(([0-9]+)\)/g;
 
   readonly strings: TemplateStringsArray;
   readonly values: readonly unknown[];
@@ -83,19 +85,19 @@ export class Template {
     // For example, if elements just had attributes like data-click="event:<id>",
     // then we need to query those elements multiple times with multiple queries
     // like [data-click], [data-mouseover] etc
-    html = html.replace(this.eventPattern, (_, event, id) => {
+    html = html.replace(eventPattern, (_, event, id) => {
       return `___event___ data-${event}="event:${id}"`;
     });
 
     // process attributes
     // ___attr___ marker is required for the same reason as ___event___
-    html = html.replace(this.attrPattern, (_, attr, id) => {
+    html = html.replace(attrPattern, (_, attr, id) => {
       return `___attr___ data-${attr}="attr:${id}"`;
     });
 
     // process strings
     // escape the strings, they might have illegal HTML
-    html = html.replace(this.strPattern, (marker, id) => {
+    html = html.replace(strPattern, (marker, id) => {
       const value = this.data[id];
       return this.escape(value?.toString() ?? marker);
     });
@@ -109,7 +111,7 @@ export class Template {
       return val.reduce((h, v) => h + this.transform(v, false), "") as string;
     } else {
       return str.reduce(
-        (h, s, i) => h + s + this.transform(val[i], this.isAttr.test(s)),
+        (h, s, i) => h + s + this.transform(val[i], isAttr.test(s)),
         ""
       );
     }
