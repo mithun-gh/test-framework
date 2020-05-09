@@ -31,7 +31,7 @@ export class Template {
 
   getTemplateInstance(): Node {
     const template = this.getTemplateElement();
-    const instance = document.importNode(template.content, true);
+    const instance = template.content.cloneNode(true) as DocumentFragment;
 
     this.execReplacer(instance, "___event___", "event", (elem, key, id) => {
       elem.addEventListener(key, this.data[id]);
