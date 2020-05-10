@@ -5,17 +5,12 @@ import {
   isAttr,
 } from "./utils/regex-patterns";
 
-export function render(template: Template, queryOrElem: string | Element) {
-  if (queryOrElem instanceof Element) {
-    queryOrElem.appendChild(template.getTemplateInstance());
-  } else {
-    const element = document.querySelector(queryOrElem);
-    if (element === null) {
-      throw new Error(`Invalid selector: ${queryOrElem}`);
-    }
-    element.innerHTML = "";
-    element.appendChild(template.getTemplateInstance());
+export function render(template: Template, container: Element) {
+  if (container === null) {
+    throw new Error(`Container cannot be null.`);
   }
+  container.innerHTML = "";
+  container.appendChild(template.getTemplateInstance());
 }
 
 export class Template {
