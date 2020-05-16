@@ -22,11 +22,11 @@ export class Template {
     const template = this.getTemplateElement();
     const instance = template.content.cloneNode(true) as DocumentFragment;
 
-    this.execReplacer(instance, "___event___", "event", (elem, key, id) => {
+    this.execReplacer(instance, "data-event-marker", "event", (elem, key, id) => {
       elem.addEventListener(key, this.data[id]);
     });
 
-    this.execReplacer(instance, "___attr___", "attr", (elem, key, id) => {
+    this.execReplacer(instance, "data-attr-marker", "attr", (elem, key, id) => {
       elem[this.preprocessKey(key)] = this.data[id];
     });
 
@@ -69,19 +69,19 @@ export class Template {
     let html = this.getHtml(this.strings, this.values);
 
     // process event handlers
-    // ___event___ marker is needed because, without it, querying
+    // data-event-marker is needed because, without it, querying
     // all the elements that have event bindings will be impossible/difficult.
     // For example, if elements just had attributes like data-click="event:<id>",
     // then we need to query those elements multiple times with multiple queries
     // like [data-click], [data-mouseover] etc
     html = html.replace(eventPattern, (_, event, id) => {
-      return `___event___ data-${event}="event:${id}"`;
+      return `data-event-marker data-${event}="event:${id}"`;
     });
 
     // process attributes
-    // ___attr___ marker is required for the same reason as ___event___
+    // data-attr-marker is required for the same reason as data-event-marker
     html = html.replace(attrPattern, (_, attr, id) => {
-      return `___attr___ data-${attr}="attr:${id}"`;
+      return `data-attr-marker data-${attr}="attr:${id}"`;
     });
 
     // process strings
