@@ -10,9 +10,8 @@ export function render(template: Template, container: Element) {
 
 export class Template {
   private data: any = {};
-
-  readonly strings: readonly string[];
-  readonly values: readonly unknown[];
+  private strings: readonly string[];
+  private values: readonly unknown[];
 
   constructor(strings: readonly string[], values: readonly unknown[]) {
     this.strings = strings;
