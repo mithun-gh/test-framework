@@ -1,9 +1,4 @@
-import {
-  eventPattern,
-  attrPattern,
-  strPattern,
-  isAttr,
-} from "./utils/regex-patterns";
+import { eventPattern, attrPattern, strPattern, isAttr } from "./utils/regex-patterns";
 
 export function render(template: Template, container: Element) {
   if (container === null) {
@@ -16,10 +11,10 @@ export function render(template: Template, container: Element) {
 export class Template {
   private data: any = {};
 
-  readonly strings: TemplateStringsArray;
+  readonly strings: readonly string[];
   readonly values: readonly unknown[];
 
-  constructor(strings: TemplateStringsArray, values: readonly unknown[]) {
+  constructor(strings: readonly string[], values: readonly unknown[]) {
     this.strings = strings;
     this.values = values;
   }
@@ -101,14 +96,11 @@ export class Template {
   }
 
   // recursively flatten the nested strings and values
-  private getHtml(str: TemplateStringsArray, val: readonly unknown[]): string {
+  private getHtml(str: readonly string[], val: readonly unknown[]): string {
     if (str === null) {
       return val.reduce((h, v) => h + this.transform(v, false), "") as string;
     } else {
-      return str.reduce(
-        (h, s, i) => h + s + this.transform(val[i], isAttr.test(s)),
-        ""
-      );
+      return str.reduce((h, s, i) => h + s + this.transform(val[i], isAttr.test(s)), "");
     }
   }
 
@@ -150,5 +142,5 @@ export class Template {
   }
 }
 
-export const html = (strings: TemplateStringsArray, ...values: unknown[]) =>
+export const html = (strings: readonly string[], ...values: readonly unknown[]) =>
   new Template(strings, values);
