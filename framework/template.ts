@@ -118,7 +118,7 @@ export class Template {
     if (val != null) {
       const id = this.getId();
       this.data[id] = val;
-      return `___$$mfr(${id})`;
+      return `{{${id}}}`;
     }
 
     return "";
