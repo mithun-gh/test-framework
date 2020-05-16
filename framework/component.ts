@@ -11,9 +11,7 @@ export const Property = (target: any, key: string) => {
   target.attributes.push(key);
 };
 
-export const Component = (tagName: string) => <T extends Constructor>(
-  constructor: T
-) => {
+export const Component = (tagName: string) => <T extends Constructor>(constructor: T) => {
   const component: any = new constructor();
 
   const element = class extends HTMLElement {
