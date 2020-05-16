@@ -88,7 +88,7 @@ export class Template {
     // escape the strings, they might have illegal HTML
     html = html.replace(strPattern, (marker, id) => {
       const value = this.data[id];
-      return this.escape(value?.toString() ?? marker);
+      return value ? `<span data-text-marker>${this.escape(value.toString())}</span>` : marker;
     });
 
     return html;
