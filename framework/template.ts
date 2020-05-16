@@ -30,6 +30,11 @@ export class Template {
       elem[this.preprocessKey(key)] = this.data[id];
     });
 
+    this.execReplacer(instance, "data-text-marker", "text", (elem, _, id) => {
+      const text = document.createTextNode(this.data[id]);
+      elem.replaceWith(text);
+    });
+
     return instance;
   }
 
@@ -47,6 +52,11 @@ export class Template {
     cb: Function
   ) {
     instance.querySelectorAll(`[${marker}]`).forEach((element: HTMLElement) => {
+      if (replacerType === "text") {
+        cb(element, null, element.dataset.textMarker);
+        return;
+      }
+
       element.removeAttribute(marker);
       Object.entries(element.dataset).forEach((entry) => {
         const [key, value] = entry;
@@ -88,7 +98,7 @@ export class Template {
     // escape the strings, they might have illegal HTML
     html = html.replace(strPattern, (marker, id) => {
       const value = this.data[id];
-      return value ? `<span data-text-marker>${this.escape(value.toString())}</span>` : marker;
+      return value ? `<span data-text-marker="${id}"></span>` : marker;
     });
 
     return html;
