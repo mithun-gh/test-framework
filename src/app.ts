@@ -33,12 +33,10 @@ const template = () => html`
   <h4>Hello, ${name}!</h4>
   <input type="text" />
   <input type="button" value="Click Me!" onclick=${data.onclick} />
-  <p>
-    Check the following items:
-    <ul>
-      ${items.map((item) => html`<li>${item}</li>`)}
-    </ul>
-  </p>
+  <p>Check the following items:</p>
+  <ul>
+    ${items.map((item) => html`<li>${item}</li>`)}
+  </ul>
 `;
 
 render(template(), document.querySelector("#root"));
