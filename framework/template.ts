@@ -31,7 +31,7 @@ export class Template {
     });
 
     this.execReplacer(instance, "data-text-marker", "text", (elem, _, id) => {
-      const text = document.createTextNode(this.data[id]);
+      const text = document.createTextNode(this.escape(this.data[id]));
       elem.replaceWith(text);
     });
 
