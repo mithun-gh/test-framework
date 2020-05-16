@@ -10,24 +10,35 @@ class MyGreeter {
   }
 }
 
+let count = 2;
+let name = "Mithun";
+let items = ["<b>0</b>", "1", "2"];
+
 const data = {
-  name: "Mithun",
-  onclick: (e) => {
-    console.log(e);
+  onclick(e) {
+    count++;
+    items.push(count.toString());
+    render(template(), document.querySelector("#root"));
   },
-  items: ["<b>One</b>", "Two", "Three"],
+  onkeypress(e) {
+    if (e.code === "Enter") {
+      name = e.target.value;
+      e.target.value = "";
+      render(template(), document.querySelector("#root"));
+    }
+  },
 };
 
-const template = html`
-  <h4>Hello, ${data.name}!</h4>
+const template = () => html`
+  <h4>Hello, ${name}!</h4>
   <input type="text" />
   <input type="button" value="Click Me!" onclick=${data.onclick} />
   <p>
     Check the following items:
     <ul>
-      ${data.items.map((item) => html`<li>${item}</li>`)}
+      ${items.map((item) => html`<li>${item}</li>`)}
     </ul>
   </p>
 `;
 
-render(template, "#root");
+render(template(), document.querySelector("#root"));
