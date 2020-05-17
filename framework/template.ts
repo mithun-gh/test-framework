@@ -4,7 +4,10 @@ export function render(template: Template, container: Element) {
   if (container === null) {
     throw new Error(`Container cannot be null.`);
   }
-  container.innerHTML = "";
+  // Clear the container
+  while (container.firstChild) {
+    container.firstChild.remove();
+  }
   container.appendChild(template.getTemplateInstance());
 }
 
