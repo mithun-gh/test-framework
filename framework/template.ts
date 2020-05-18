@@ -25,15 +25,15 @@ export class Template {
     const template = this.getTemplateElement();
     const instance = template.content.cloneNode(true) as DocumentFragment;
 
-    this.execReplacer(instance, "data-event-marker", "event", (elem, key, id) => {
+    this.execReplacer(instance, "event-marker", "event", (elem, key, id) => {
       elem.addEventListener(key, this.data[id]);
     });
 
-    this.execReplacer(instance, "data-attr-marker", "attr", (elem, key, id) => {
+    this.execReplacer(instance, "attr-marker", "attr", (elem, key, id) => {
       elem[this.preprocessKey(key)] = this.data[id];
     });
 
-    this.execReplacer(instance, "data-text-marker", "text", (elem, _, id) => {
+    this.execReplacer(instance, "text-marker", "text", (elem, _, id) => {
       const text = document.createTextNode(this.data[id]);
       elem.replaceWith(text);
     });
@@ -56,7 +56,7 @@ export class Template {
   ) {
     instance.querySelectorAll(`[${marker}]`).forEach((element: HTMLElement) => {
       if (replacerType === "text") {
-        cb(element, null, element.dataset.textMarker);
+        cb(element, null, element.dataset.text);
         return;
       }
 
@@ -82,26 +82,26 @@ export class Template {
     let html = this.getHtml(this.strings, this.values);
 
     // process event handlers
-    // data-event-marker is needed because, without it, querying
+    // event-marker is needed because, without it, querying
     // all the elements that have event bindings will be impossible/difficult.
     // For example, if elements just had attributes like data-click="event:<id>",
     // then we need to query those elements multiple times with multiple queries
     // like [data-click], [data-mouseover] etc
     html = html.replace(eventPattern, (_, event, id) => {
-      return `data-event-marker data-${event}="event:${id}"`;
+      return `event-marker data-${event}="event:${id}"`;
     });
 
     // process attributes
-    // data-attr-marker is required for the same reason as data-event-marker
+    // attr-marker is required for the same reason as event-marker
     html = html.replace(attrPattern, (_, attr, id) => {
-      return `data-attr-marker data-${attr}="attr:${id}"`;
+      return `attr-marker data-${attr}="attr:${id}"`;
     });
 
     // process strings
     // escape the strings, they might have illegal HTML
     html = html.replace(strPattern, (marker, id) => {
       const value = this.data[id];
-      return value ? `<span data-text-marker="${id}"></span>` : marker;
+      return value ? `<span text-marker data-text="${id}"></span>` : marker;
     });
 
     return html;
