@@ -1,5 +1,17 @@
 import { eventPattern, attrPattern, strPattern, isAttr } from "./utils/regex-patterns";
 
+enum SlotType {
+  Attribute = "attribute",
+  Event = "event",
+  Text = "text",
+}
+
+interface Slot {
+  node: Node;
+  type: SlotType;
+  value: unknown;
+}
+
 export function render(template: Template, container: Element) {
   if (container === null) {
     throw new Error(`Container cannot be null.`);
@@ -12,7 +24,7 @@ export function render(template: Template, container: Element) {
 }
 
 export class Template {
-  private data: any = {};
+  private slots: Partial<Slot>[] = [];
   private strings: readonly string[];
   private values: readonly unknown[];
 
@@ -26,15 +38,24 @@ export class Template {
     const instance = template.content.cloneNode(true) as DocumentFragment;
 
     this.execReplacer(instance, "event-marker", "event", (elem, key, id) => {
-      elem.addEventListener(key, this.data[id]);
+      const slot = this.slots[id];
+      slot.node = elem;
+      slot.type = SlotType.Event;
+      elem.addEventListener(key, slot.value);
     });
 
     this.execReplacer(instance, "attr-marker", "attr", (elem, key, id) => {
-      elem[this.preprocessKey(key)] = this.data[id];
+      const slot = this.slots[id];
+      slot.node = elem;
+      slot.type = SlotType.Attribute;
+      elem[this.preprocessKey(key)] = slot.value;
     });
 
     this.execReplacer(instance, "text-marker", "text", (elem, _, id) => {
-      const text = document.createTextNode(this.data[id]);
+      const slot = this.slots[id];
+      const text = document.createTextNode(slot.value as string);
+      slot.node = text;
+      slot.type = SlotType.Text;
       elem.replaceWith(text);
     });
 
@@ -100,7 +121,7 @@ export class Template {
     // process strings
     // escape the strings, they might have illegal HTML
     html = html.replace(strPattern, (marker, id) => {
-      const value = this.data[id];
+      const value = this.slots[id].value;
       return value ? `<span text-marker data-text="${id}"></span>` : marker;
     });
 
@@ -129,9 +150,10 @@ export class Template {
     }
 
     if (val != null) {
-      const id = this.getId();
-      this.data[id] = val;
-      return `{{${id}}}`;
+      this.slots.push({ value: val });
+      // TODO: add a random prefix using getId() to
+      // avoid collusion with the user-supplied text
+      return `{{${this.slots.length - 1}}}`;
     }
 
     return "";
