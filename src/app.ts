@@ -31,7 +31,7 @@ const data = {
 
 const template = () => html`
   <h4>Hello, ${name}!</h4>
-  <input type="text" />
+  <input type="text" onkeypress=${data.onkeypress} />
   <input type="button" value="Click Me!" onclick=${data.onclick} />
   <p>Check the following items:</p>
   <ul>
