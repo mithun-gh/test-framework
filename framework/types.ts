@@ -2,9 +2,21 @@
 // FragmentCache.set(template.strings, new Fragment(container));
 export const FragmentCache: WeakMap<readonly string[], Fragment> = new WeakMap();
 
+export enum ValueType {
+  Attribute = "attribute",
+  Event = "event",
+  Template = "template",
+  Text = "text",
+}
+
+export interface Value {
+  type: ValueType;
+  data: unknown;
+}
+
 export class Template {
   readonly strings: readonly string[];
-  readonly values: readonly unknown[];
+  readonly values: readonly Value[];
 }
 
 export enum SlotType {
@@ -46,6 +58,7 @@ export class Slot {
 export class Fragment {
   #parent: Node;
   #slots: Slot[];
+  #node: HTMLTemplateElement;
 
   constructor(parent: Node) {
     this.#parent = parent;
