@@ -21,7 +21,7 @@ export function render(template: Template, container: Element) {
   while (container.firstChild) {
     container.firstChild.remove();
   }
-  container.appendChild(template.getTemplateInstance());
+  container.appendChild(template.getTemplateInstance(container));
 }
 
 export class Template {
@@ -34,7 +34,7 @@ export class Template {
     this.values = values;
   }
 
-  getTemplateInstance(): Node {
+  getTemplateInstance(container: Node): Node {
     const parents: Node[] = [];
     const template = this.getTemplateElement();
     const instance = template.content.cloneNode(true) as DocumentFragment;
@@ -47,7 +47,7 @@ export class Template {
       const slot = this.slots[id];
       slot.node = elem;
       slot.type = SlotType.Event;
-      slot.parent = parents.find((p) => p.parentNode.contains(elem))?.parentNode;
+      slot.parent = this.findParent(parents, elem) ?? container;
       elem.addEventListener(key, slot.value);
     });
 
@@ -55,7 +55,7 @@ export class Template {
       const slot = this.slots[id];
       slot.node = elem;
       slot.type = SlotType.Attribute;
-      slot.parent = parents.find((p) => p.parentNode.contains(elem))?.parentNode;
+      slot.parent = this.findParent(parents, elem) ?? container;
       elem[this.preprocessKey(key)] = slot.value;
     });
 
@@ -64,13 +64,17 @@ export class Template {
       const text = document.createTextNode(slot.value as string);
       slot.node = text;
       slot.type = SlotType.Text;
-      slot.parent = parents.find((p) => p.parentNode.contains(elem))?.parentNode;
+      slot.parent = this.findParent(parents, elem) ?? container;
       elem.replaceWith(text);
     });
 
     parents.forEach((p) => p.parentNode.removeChild(p));
 
     return instance;
+  }
+
+  private findParent(parents: Node[], child: Node): Node {
+    return parents.find((p) => p.parentNode.contains(child))?.parentNode;
   }
 
   private preprocessKey(key: string): string {
