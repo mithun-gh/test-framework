@@ -8,6 +8,7 @@ enum SlotType {
 
 interface Slot {
   node: Node;
+  parent: Node;
   type: SlotType;
   value: unknown;
 }
@@ -34,13 +35,19 @@ export class Template {
   }
 
   getTemplateInstance(): Node {
+    const parents: Node[] = [];
     const template = this.getTemplateElement();
     const instance = template.content.cloneNode(true) as DocumentFragment;
+
+    instance.querySelectorAll("[parent-marker]").forEach((parent) => {
+      parents.push(parent);
+    });
 
     this.execReplacer(instance, "event-marker", "event", (elem, key, id) => {
       const slot = this.slots[id];
       slot.node = elem;
       slot.type = SlotType.Event;
+      slot.parent = parents.find((p) => p.parentNode.contains(elem))?.parentNode;
       elem.addEventListener(key, slot.value);
     });
 
@@ -48,6 +55,7 @@ export class Template {
       const slot = this.slots[id];
       slot.node = elem;
       slot.type = SlotType.Attribute;
+      slot.parent = parents.find((p) => p.parentNode.contains(elem))?.parentNode;
       elem[this.preprocessKey(key)] = slot.value;
     });
 
@@ -56,8 +64,11 @@ export class Template {
       const text = document.createTextNode(slot.value as string);
       slot.node = text;
       slot.type = SlotType.Text;
+      slot.parent = parents.find((p) => p.parentNode.contains(elem))?.parentNode;
       elem.replaceWith(text);
     });
+
+    parents.forEach((p) => p.parentNode.removeChild(p));
 
     return instance;
   }
@@ -122,7 +133,7 @@ export class Template {
     // escape the strings, they might have illegal HTML
     html = html.replace(strPattern, (marker, id) => {
       const value = this.slots[id].value;
-      return value ? `<span text-marker data-text="${id}"></span>` : marker;
+      return value ? `<template text-marker data-text="${id}"></template>` : marker;
     });
 
     return html;
@@ -146,7 +157,7 @@ export class Template {
     // it should be treated as a data.
     // or else, recursively flatten out the array
     if (Array.isArray(val) && !isAttr) {
-      return this.getHtml(null, val);
+      return "<template parent-marker></template>" + this.getHtml(null, val);
     }
 
     if (val != null) {
