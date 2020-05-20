@@ -2,8 +2,12 @@
 // FragmentCache.set(template.strings, new Fragment(container));
 export const FragmentCache: WeakMap<readonly string[], Fragment> = new WeakMap();
 
+const markerId: number = Math.ceil(Math.random() * Number.MAX_SAFE_INTEGER);
+const marker: string = `{${markerId}}`;
+
 const event: RegExp = /\s+on([a-z]+)\s*=$/;
 const attribute: RegExp = /\s+([a-z]+)\s*=$/;
+const markedStrings = new RegExp(`[a-z]+=\\${marker}|\\${marker}`, "gi");
 
 export enum ValueType {
   Attribute = "attribute",
@@ -12,7 +16,7 @@ export enum ValueType {
   Text = "text",
 }
 
-export type ValueData = [string, unknown] | Template | Template[] | string;
+export type ValueData = [string, unknown, number] | Template | Template[] | string;
 
 export class Value {
   readonly type: ValueType;
@@ -25,11 +29,11 @@ export class Value {
 }
 
 export class Template {
-  readonly strings: readonly string[];
+  readonly string: string;
   readonly values: readonly Value[];
 
-  constructor(string: readonly string[], values: readonly Value[]) {
-    this.strings = string;
+  constructor(string: string, values: readonly Value[]) {
+    this.string = string;
     this.values = values;
   }
 }
@@ -89,6 +93,7 @@ export class Fragment {
 }
 
 export function html(strings: readonly string[], ...values: readonly unknown[]): Template {
+  let annotatedString: string;
   let annotatedValues: Value[] = [];
 
   values.forEach((value, i) => {
@@ -97,9 +102,9 @@ export function html(strings: readonly string[], ...values: readonly unknown[]):
     let str: string = strings[i];
 
     if ((key = str.match(event)?.[1])) {
-      val = new Value(ValueType.Event, [key, value]);
+      val = new Value(ValueType.Event, [key, value, i]);
     } else if ((key = str.match(attribute)?.[1])) {
-      val = new Value(ValueType.Attribute, [key, value]);
+      val = new Value(ValueType.Attribute, [key, value, i]);
     } else if (value instanceof Template || value?.[0] instanceof Template) {
       val = new Value(ValueType.Template, value as Template[]);
     } else {
@@ -109,7 +114,19 @@ export function html(strings: readonly string[], ...values: readonly unknown[]):
     annotatedValues.push(val);
   });
 
-  return new Template(strings, annotatedValues);
+  let markerIndex: number = -1;
+  annotatedString = strings.join(marker).replace(markedStrings, () => {
+    markerIndex += 1;
+    const val = annotatedValues[markerIndex];
+
+    if (val.type === ValueType.Text || val.type === ValueType.Template) {
+      return `<slot data-x${markerId}="${markerIndex}"></slot>`;
+    }
+
+    return `data-x${markerId}="${markerIndex}"`;
+  });
+
+  return new Template(annotatedString, annotatedValues);
 }
 
 export function render(template: Template, container: Element) {
