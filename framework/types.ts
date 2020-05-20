@@ -133,5 +133,19 @@ export function render(template: Template, container: Element) {
   if (container === null) {
     throw new Error(`Container cannot be null.`);
   }
-  console.log(template);
+
+  let templateElement = document.createElement("template");
+  templateElement.innerHTML = template.string;
+
+  let fragment = templateElement.content.cloneNode(true) as DocumentFragment;
+  let slots = Array.from(fragment.querySelectorAll(`[data-x${markerId}]`));
+
+  slots.forEach((slot: HTMLElement, i) => {
+    const min = Number(slot.dataset[`x${markerId}`]);
+    const max = Number((slots[i + 1] as HTMLElement)?.dataset?.[`x${markerId}`] ?? min + 1);
+    const count = max - min;
+    console.log(slot, count);
+  });
+
+  console.log(template.values);
 }
