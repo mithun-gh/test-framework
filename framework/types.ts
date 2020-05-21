@@ -92,9 +92,10 @@ export class Fragment {
   }
 }
 
-export function html(strings: readonly string[], ...values: readonly unknown[]): Template {
+export function html(strings: TemplateStringsArray, ...values: readonly unknown[]): Template {
   let annotatedString: string;
   let annotatedValues: Value[] = [];
+  const rawStrings: readonly string[] = strings.raw;
 
   values.forEach((value, i) => {
     let key: string;
