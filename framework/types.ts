@@ -7,7 +7,14 @@ const marker: string = `{${markerId}}`;
 
 const event: RegExp = /\s+on([a-z]+)\s*=$/;
 const attribute: RegExp = /\s+([a-z]+)\s*=$/;
+const openTagEnd: RegExp = /\/?>/;
+const stringLiteral: RegExp = /""|".*?[^\\]"|''|'.*?[^\\]'/g;
 const markedStrings = new RegExp(`[a-z]+=\\${marker}|\\${marker}`, "gi");
+
+// str should be String.raw
+function isOpenTagEnd(str: string): boolean {
+  return str ? openTagEnd.test(str.replace(stringLiteral, "")) : null;
+}
 
 export enum ValueType {
   Attribute = "attribute",
@@ -16,7 +23,7 @@ export enum ValueType {
   Text = "text",
 }
 
-export type ValueData = [string, unknown, number] | Template | Template[] | string;
+export type ValueData = [string, unknown, boolean] | Template | Template[] | string;
 
 export class Value {
   readonly type: ValueType;
@@ -101,11 +108,12 @@ export function html(strings: TemplateStringsArray, ...values: readonly unknown[
     let key: string;
     let val: any;
     let str: string = strings[i];
+    const isLastAttr = isOpenTagEnd(rawStrings[i + 1]) ?? true;
 
     if ((key = str.match(event)?.[1])) {
-      val = new Value(ValueType.Event, [key, value, i]);
+      val = new Value(ValueType.Event, [key, value, isLastAttr]);
     } else if ((key = str.match(attribute)?.[1])) {
-      val = new Value(ValueType.Attribute, [key, value, i]);
+      val = new Value(ValueType.Attribute, [key, value, isLastAttr]);
     } else if (value instanceof Template || value?.[0] instanceof Template) {
       val = new Value(ValueType.Template, value as Template[]);
     } else {
@@ -124,7 +132,7 @@ export function html(strings: TemplateStringsArray, ...values: readonly unknown[
       return `<slot data-x${markerId}="${markerIndex}"></slot>`;
     }
 
-    return `data-x${markerId}="${markerIndex}"`;
+    return val.data[2] ? `data-x${markerId}="${markerIndex}"` : "";
   });
 
   return new Template(annotatedString, annotatedValues);
