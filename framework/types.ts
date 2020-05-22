@@ -26,22 +26,38 @@ export enum ValueType {
 export type ValueData = [string, unknown, boolean] | Template | Template[] | string;
 
 export class Value {
-  readonly type: ValueType;
-  readonly data: ValueData;
+  #type: ValueType;
+  #data: ValueData;
 
   constructor(type: ValueType, data: ValueData) {
-    this.type = type;
-    this.data = data;
+    this.#type = type;
+    this.#data = data;
+  }
+
+  get type(): ValueType {
+    return this.#type;
+  }
+
+  get data(): ValueData {
+    return this.#data;
   }
 }
 
 export class Template {
-  readonly string: string;
-  readonly values: readonly Value[];
+  #string: string;
+  #values: readonly Value[];
 
   constructor(string: string, values: readonly Value[]) {
-    this.string = string;
-    this.values = values;
+    this.#string = string;
+    this.#values = values;
+  }
+
+  get string(): string {
+    return this.#string;
+  }
+
+  get values(): readonly Value[] {
+    return this.#values;
   }
 }
 
@@ -145,7 +161,7 @@ export function render(template: Template, container: Element) {
   templateElement.innerHTML = template.string;
 
   let fragment = templateElement.content.cloneNode(true) as DocumentFragment;
-  let slots = Array.from(fragment.querySelectorAll(`[data-x${slotId}]`));
+  let slots = Array.from(fragment.querySelectorAll(`[data-slot-${slotId}]`));
 
-  console.log(fragment);
+  console.log(fragment, template.values);
 }
