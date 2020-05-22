@@ -5,8 +5,8 @@ export const FragmentCache: WeakMap<readonly string[], Fragment> = new WeakMap()
 const slotId: number = Math.ceil(Math.random() * Number.MAX_SAFE_INTEGER);
 const slotMarker: string = `{${slotId}}`;
 
-const event: RegExp = /\s+on([a-z]+)\s*=$/;
-const attribute: RegExp = /\s+([a-z]+)\s*=$/;
+const event: RegExp = /\s+on([a-z]+)\s*=$/i;
+const attribute: RegExp = /\s+([a-z]+)\s*=$/i;
 const openTagEnd: RegExp = /\/?>/;
 const stringLiteral: RegExp = /""|".*?[^\\]"|''|'.*?[^\\]'/g;
 const markedStrings = new RegExp(`[a-z]+=\\${slotMarker}|\\${slotMarker}`, "gi");
