@@ -4,6 +4,9 @@ export const FragmentCache: WeakMap<readonly string[], Fragment> = new WeakMap()
 
 const slotId: number = Math.ceil(Math.random() * Number.MAX_SAFE_INTEGER);
 const slotMarker: string = `{${slotId}}`;
+const slotAttribute: string = `data-slot-${slotId}`;
+const slotSelector: string = `[${slotAttribute}]`;
+const slotProperty: string = `slot-${slotId}`;
 
 const event: RegExp = /\s+on([a-z]+)\s*=$/i;
 const attribute: RegExp = /\s+([a-z]+)\s*=$/i;
@@ -72,7 +75,9 @@ export class Slot {
   #type: SlotType;
   #value: unknown;
 
-  constructor(value: unknown) {
+  constructor(node: Node, type: SlotType, value: unknown) {
+    this.#node = node;
+    this.#type = type;
     this.#value = value;
   }
 
@@ -80,38 +85,59 @@ export class Slot {
     return this.#type;
   }
 
-  set type(value: SlotType) {
-    this.#type = value;
-  }
-
   get value(): unknown {
     return this.#value;
-  }
-
-  set value(value: unknown) {
-    this.#value = value;
-    if (this.#type === SlotType.Text) {
-      const node = this.#node as Text;
-      node.data = value as string;
-    }
   }
 }
 
 export class Fragment {
-  #parent: Node;
-  #slots: Slot[];
-  #node: HTMLTemplateElement;
+  #container: Node;
+  #slots: Slot[] = [];
+  #node: DocumentFragment;
 
-  constructor(parent: Node) {
-    this.#parent = parent;
+  constructor(template: Template, container: Node) {
+    // add parent container
+    this.#container = container;
+
+    // create document fragment
+    const templateElement = document.createElement("template");
+    templateElement.innerHTML = template.string;
+    this.#node = templateElement.content.cloneNode(true) as DocumentFragment;
+
+    // assign slots
+    this.#node.querySelectorAll(slotSelector).forEach((element: HTMLElement) => {
+      const limit = Number(element.dataset[slotProperty]);
+      for (let i = 0; i <= limit; i++) {
+        const value = template.values[i];
+        if (value.type !== ValueType.Template) {
+          this.#slots.push(this.createSlot(value, element));
+        }
+      }
+      element.removeAttribute(slotAttribute);
+    });
+  }
+
+  get container(): Node {
+    return this.#container;
   }
 
   get slots(): Slot[] {
     return [...this.#slots];
   }
 
-  addSlot(value: unknown) {
-    this.#slots.push(new Slot(value));
+  get node(): DocumentFragment {
+    return this.#node;
+  }
+
+  attach(): void {
+    while (this.#container.firstChild) {
+      this.#container.firstChild.remove();
+    }
+    this.#container.appendChild(this.#node);
+  }
+
+  private createSlot(value: Value, element: HTMLElement): Slot {
+    return new Slot(element, SlotType.Attribute, value.data);
   }
 }
 
@@ -156,5 +182,7 @@ export function render(template: Template, container: Element) {
   if (container === null) {
     throw new Error(`Container cannot be null.`);
   }
+  const fragment = new Fragment(template, container);
+  fragment.attach();
   console.log(template.string, template.values);
 }
