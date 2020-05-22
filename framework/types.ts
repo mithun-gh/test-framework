@@ -156,12 +156,5 @@ export function render(template: Template, container: Element) {
   if (container === null) {
     throw new Error(`Container cannot be null.`);
   }
-
-  let templateElement = document.createElement("template");
-  templateElement.innerHTML = template.string;
-
-  let fragment = templateElement.content.cloneNode(true) as DocumentFragment;
-  let slots = Array.from(fragment.querySelectorAll(`[data-slot-${slotId}]`));
-
-  console.log(fragment, template.values);
+  console.log(template.string, template.values);
 }
