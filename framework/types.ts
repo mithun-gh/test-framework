@@ -2,14 +2,14 @@
 // FragmentCache.set(template.strings, new Fragment(container));
 export const FragmentCache: WeakMap<readonly string[], Fragment> = new WeakMap();
 
-const markerId: number = Math.ceil(Math.random() * Number.MAX_SAFE_INTEGER);
-const marker: string = `{${markerId}}`;
+const slotId: number = Math.ceil(Math.random() * Number.MAX_SAFE_INTEGER);
+const slotMarker: string = `{${slotId}}`;
 
 const event: RegExp = /\s+on([a-z]+)\s*=$/;
 const attribute: RegExp = /\s+([a-z]+)\s*=$/;
 const openTagEnd: RegExp = /\/?>/;
 const stringLiteral: RegExp = /""|".*?[^\\]"|''|'.*?[^\\]'/g;
-const markedStrings = new RegExp(`[a-z]+=\\${marker}|\\${marker}`, "gi");
+const markedStrings = new RegExp(`[a-z]+=\\${slotMarker}|\\${slotMarker}`, "gi");
 
 // str should be String.raw
 function isOpenTagEnd(str: string): boolean {
@@ -123,17 +123,19 @@ export function html(strings: TemplateStringsArray, ...values: readonly unknown[
     annotatedValues.push(val);
   });
 
-  let markerIndex: number = -1;
-  annotatedString = strings.join(marker).replace(markedStrings, () => {
-    markerIndex += 1;
-    const val = annotatedValues[markerIndex];
+  let slotIndex: number = -1;
+  annotatedString = strings.join(slotMarker).replace(markedStrings, () => {
+    slotIndex += 1;
+    const val = annotatedValues[slotIndex];
 
     if (val.type === ValueType.Text || val.type === ValueType.Template) {
-      return `<slot data-x${markerId}="${markerIndex}"></slot>`;
+      return `<template data-slot-${slotId}="${slotIndex}"></template>`;
     }
 
-    return val.data[2] ? `data-x${markerId}="${markerIndex}"` : "";
+    return val.data[2] ? `data-slot-${slotId}="${slotIndex}"` : "";
   });
+
+  console.log(annotatedString, annotatedValues);
 
   return new Template(annotatedString, annotatedValues);
 }
@@ -147,11 +149,11 @@ export function render(template: Template, container: Element) {
   templateElement.innerHTML = template.string;
 
   let fragment = templateElement.content.cloneNode(true) as DocumentFragment;
-  let slots = Array.from(fragment.querySelectorAll(`[data-x${markerId}]`));
+  let slots = Array.from(fragment.querySelectorAll(`[data-x${slotId}]`));
 
   slots.forEach((slot: HTMLElement, i) => {
-    const min = Number(slot.dataset[`x${markerId}`]);
-    const max = Number((slots[i + 1] as HTMLElement)?.dataset?.[`x${markerId}`] ?? min + 1);
+    const min = Number(slot.dataset[`x${slotId}`]);
+    const max = Number((slots[i + 1] as HTMLElement)?.dataset?.[`x${slotId}`] ?? min + 1);
     const count = max - min;
     console.log(slot, count);
   });
