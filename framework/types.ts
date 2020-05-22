@@ -125,17 +125,13 @@ export function html(strings: TemplateStringsArray, ...values: readonly unknown[
 
   let slotIndex: number = -1;
   annotatedString = strings.join(slotMarker).replace(markedStrings, () => {
-    slotIndex += 1;
-    const val = annotatedValues[slotIndex];
-
+    const val = annotatedValues[++slotIndex];
     if (val.type === ValueType.Text || val.type === ValueType.Template) {
       return `<template data-slot-${slotId}="${slotIndex}"></template>`;
+    } else {
+      return val.data[2] ? `data-slot-${slotId}="${slotIndex}"` : "";
     }
-
-    return val.data[2] ? `data-slot-${slotId}="${slotIndex}"` : "";
   });
-
-  console.log(annotatedString, annotatedValues);
 
   return new Template(annotatedString, annotatedValues);
 }
@@ -151,12 +147,5 @@ export function render(template: Template, container: Element) {
   let fragment = templateElement.content.cloneNode(true) as DocumentFragment;
   let slots = Array.from(fragment.querySelectorAll(`[data-x${slotId}]`));
 
-  slots.forEach((slot: HTMLElement, i) => {
-    const min = Number(slot.dataset[`x${slotId}`]);
-    const max = Number((slots[i + 1] as HTMLElement)?.dataset?.[`x${slotId}`] ?? min + 1);
-    const count = max - min;
-    console.log(slot, count);
-  });
-
-  console.log(template.values);
+  console.log(fragment);
 }
