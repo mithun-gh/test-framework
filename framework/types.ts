@@ -126,6 +126,12 @@ export class Fragment {
         const value = template.values[valueIndex];
         if (value.type !== ValueType.Template) {
           this.#slots.push(this.createSlot(value, element));
+        } else {
+          const templates = (Array.isArray(value.data) ? value.data : [value.data]) as Template[];
+          templates.forEach((template: Template) => {
+            new Fragment(template, element.parentNode).append();
+          });
+          element.remove();
         }
         valueIndex++;
       }
@@ -149,6 +155,10 @@ export class Fragment {
     while (this.#container.firstChild) {
       this.#container.firstChild.remove();
     }
+    this.#container.appendChild(this.#node);
+  }
+
+  append(): void {
     this.#container.appendChild(this.#node);
   }
 
