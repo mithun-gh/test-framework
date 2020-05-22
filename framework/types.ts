@@ -79,6 +79,20 @@ export class Slot {
     this.#node = node;
     this.#type = type;
     this.#value = value;
+
+    if (type === SlotType.Text) {
+      (this.#node as Text).data = value as string;
+    }
+
+    if (type === SlotType.Attribute) {
+      const [key, val] = value as [string, any];
+      this.#node[key] = val;
+    }
+
+    if (type === SlotType.Event) {
+      const [key, val] = value as [string, EventListenerOrEventListenerObject];
+      this.#node.addEventListener(key, val);
+    }
   }
 
   get type(): SlotType {
@@ -105,13 +119,15 @@ export class Fragment {
     this.#node = templateElement.content.cloneNode(true) as DocumentFragment;
 
     // assign slots
+    let valueIndex = 0;
     this.#node.querySelectorAll(slotSelector).forEach((element: HTMLElement) => {
       const limit = Number(element.dataset[slotProperty]);
-      for (let i = 0; i <= limit; i++) {
-        const value = template.values[i];
+      while (valueIndex <= limit) {
+        const value = template.values[valueIndex];
         if (value.type !== ValueType.Template) {
           this.#slots.push(this.createSlot(value, element));
         }
+        valueIndex++;
       }
       element.removeAttribute(slotAttribute);
     });
@@ -137,7 +153,28 @@ export class Fragment {
   }
 
   private createSlot(value: Value, element: HTMLElement): Slot {
-    return new Slot(element, SlotType.Attribute, value.data);
+    if (value.type === ValueType.Text) {
+      const text = document.createTextNode("");
+      element.replaceWith(text);
+      return new Slot(text, SlotType.Text, value.data);
+    }
+
+    if (value.type === ValueType.Attribute) {
+      const [key, val] = value.data as [string, unknown];
+      return new Slot(element, SlotType.Attribute, [this.preprocessKey(key), val]);
+    }
+
+    if (value.type === ValueType.Event) {
+      const [key, val] = value.data as [string, unknown];
+      return new Slot(element, SlotType.Event, [key, val]);
+    }
+  }
+
+  private preprocessKey(key: string): string {
+    if (key === "class") {
+      return "className";
+    }
+    return key;
   }
 }
 
