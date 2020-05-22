@@ -110,33 +110,9 @@ export class Fragment {
   #node: DocumentFragment;
 
   constructor(template: Template, container: Node) {
-    // add parent container
     this.#container = container;
-
-    // create document fragment
-    const templateElement = document.createElement("template");
-    templateElement.innerHTML = template.string;
-    this.#node = templateElement.content.cloneNode(true) as DocumentFragment;
-
-    // assign slots
-    let valueIndex = 0;
-    this.#node.querySelectorAll(slotSelector).forEach((element: HTMLElement) => {
-      const limit = Number(element.dataset[slotProperty]);
-      while (valueIndex <= limit) {
-        const value = template.values[valueIndex];
-        if (value.type !== ValueType.Template) {
-          this.#slots.push(this.createSlot(value, element));
-        } else {
-          const templates = (Array.isArray(value.data) ? value.data : [value.data]) as Template[];
-          templates.forEach((template: Template) => {
-            new Fragment(template, element.parentNode).append();
-          });
-          element.remove();
-        }
-        valueIndex++;
-      }
-      element.removeAttribute(slotAttribute);
-    });
+    this.#node = this.createNode(template.string);
+    this.setValues(template.values);
   }
 
   get container(): Node {
@@ -160,6 +136,35 @@ export class Fragment {
 
   append(): void {
     this.#container.appendChild(this.#node);
+  }
+
+  reconcile(values: readonly Value[]): void {}
+
+  private createNode(templateString: string): DocumentFragment {
+    const templateElement = document.createElement("template");
+    templateElement.innerHTML = templateString;
+    return templateElement.content.cloneNode(true) as DocumentFragment;
+  }
+
+  private setValues(values: readonly Value[]): void {
+    let valueIndex = 0;
+    this.#node.querySelectorAll(slotSelector).forEach((element: HTMLElement) => {
+      const limit = Number(element.dataset[slotProperty]);
+      while (valueIndex <= limit) {
+        const value = values[valueIndex];
+        if (value.type !== ValueType.Template) {
+          this.#slots.push(this.createSlot(value, element));
+        } else {
+          const templates = (Array.isArray(value.data) ? value.data : [value.data]) as Template[];
+          templates.forEach((template: Template) => {
+            new Fragment(template, element.parentNode).append();
+          });
+          element.remove();
+        }
+        valueIndex++;
+      }
+      element.removeAttribute(slotAttribute);
+    });
   }
 
   private createSlot(value: Value, element: HTMLElement): Slot {
@@ -229,7 +234,8 @@ export function render(template: Template, container: Element) {
   if (container === null) {
     throw new Error(`Container cannot be null.`);
   }
-  const fragment = new Fragment(template, container);
-  fragment.attach();
+
+  new Fragment(template, container).attach();
+
   console.log(template.string, template.values);
 }
