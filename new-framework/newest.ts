@@ -67,16 +67,20 @@ export function html(strings: TemplateStringsArray, ...values: readonly unknown[
   return new Template(annotatedString, annotatedValues);
 }
 
-function render() {}
+let template: Template;
+let container: Element;
+export function render(t: Template, c: Element) {
+  template = template ?? t;
+  container = container ?? c;
+  console.log(template);
+}
 
 interface ComponentResult<T> {
   state: T;
-  html: (strings: TemplateStringsArray, ...values: readonly unknown[]) => Template;
+  render: (template: Template, container: Element) => void;
 }
 
 export function Component<T extends Object>(name: string, initialState: T): ComponentResult<T> {
-  // render() is accessible here
-
   let state = new Proxy(initialState, {
     get(target, key, receiver) {
       console.log("GET", key);
@@ -84,9 +88,10 @@ export function Component<T extends Object>(name: string, initialState: T): Comp
     },
     set(target, key, value) {
       console.log("SET", key);
+      render(template, container);
       return Reflect.set(target, key, value);
     },
   });
 
-  return { html, state };
+  return { state, render };
 }
