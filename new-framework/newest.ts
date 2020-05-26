@@ -2,6 +2,8 @@ import { slotMarker, slotId } from "./constants";
 import { isOpenTagEnd } from "./utils";
 import { attribute, markedStrings, event } from "./regex-patterns";
 
+let componentState: any;
+
 export enum ValueType {
   Attribute = "attribute",
   Event = "event",
@@ -67,31 +69,22 @@ export function html(strings: TemplateStringsArray, ...values: readonly unknown[
   return new Template(annotatedString, annotatedValues);
 }
 
-let template: Template;
-let container: Element;
-export function render(t: Template, c: Element) {
-  template = template ?? t;
-  container = container ?? c;
-  console.log(template);
-}
-
-interface ComponentResult<T> {
-  state: T;
-  render: (template: Template, container: Element) => void;
-}
-
-export function Component<T extends Object>(name: string, initialState: T): ComponentResult<T> {
-  let state = new Proxy(initialState, {
-    get(target, key, receiver) {
-      console.log("GET", key);
-      return Reflect.get(target, key, receiver);
-    },
-    set(target, key, value) {
-      console.log("SET", key);
-      render(template, container);
-      return Reflect.set(target, key, value);
+export function makeState<S extends Object>(state: S): S {
+  componentState = state;
+  return new Proxy<S>(state, {
+    set(target, key, receiver) {
+      console.log("SET:", key);
+      return Reflect.set(target, key, receiver);
     },
   });
+}
 
-  return { state, render };
+export function component<P, S extends Object>(name: string, render: (P, S) => Template) {
+  const proxy = new Proxy(componentState, {
+    get(target, key, receiver) {
+      console.log("GET:", key);
+      return Reflect.get(target, key, receiver);
+    },
+  });
+  render({}, proxy);
 }

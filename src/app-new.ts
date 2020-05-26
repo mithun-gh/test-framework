@@ -1,6 +1,6 @@
-import { Component, html } from "../new-framework/newest";
+import { component, html, makeState } from "../new-framework/newest";
 
-const { state, render } = Component("my-greeting", {
+const state = makeState({
   name: "Mithun",
   count: 0,
   items: [],
@@ -18,12 +18,8 @@ function onkeypress(e) {
   }
 }
 
-// setInterval(() => {
-//   state.count += 1;
-// }, 5000);
-
-render(
-  html`
+function render(props, state) {
+  return html`
     <h2>Count: ${state.count}</h2>
     <h4>Hello, ${state.name}!</h4>
     <input type="text" onkeypress=${onkeypress} />
@@ -32,6 +28,7 @@ render(
     <ul>
       ${state.items.map((item) => html`<li>${item}</li>`)}
     </ul>
-  `,
-  document.querySelector("#root-new")
-);
+  `;
+}
+
+export default component("my-greeting", render);
