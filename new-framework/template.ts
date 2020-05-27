@@ -1,6 +1,5 @@
-import { slotSelector, slotProperty, slotAttribute, slotMarker, slotId } from "./constants";
 import { isOpenTagEnd } from "./utils";
-import { attribute, markedStrings, event } from "./regex-patterns";
+import { attribute, event } from "./regex-patterns";
 
 export enum ValueType {
   Attribute = "attribute",
@@ -29,6 +28,36 @@ export class Template {
     this.string = string;
     this.values = values;
   }
+
+  createElement(): DocumentFragment {
+    const template = document.createElement("template");
+    template.innerHTML = this.string;
+    return template.content.cloneNode(true) as DocumentFragment;
+  }
+}
+
+class Sentinel {
+  readonly id: number;
+
+  constructor() {
+    this.id = Math.ceil(Math.random() * Number.MAX_SAFE_INTEGER);
+  }
+
+  get simple() {
+    return `{${this.id}}`;
+  }
+
+  get attribute() {
+    return `data-slot-${this.id}`;
+  }
+
+  get selector() {
+    return `[${this.attribute}]`;
+  }
+
+  get regex() {
+    return new RegExp(`[a-z]+=\\${this.simple}|\\${this.simple}`, "gi");
+  }
 }
 
 export function html(strings: TemplateStringsArray, ...values: readonly unknown[]): Template {
@@ -56,12 +85,13 @@ export function html(strings: TemplateStringsArray, ...values: readonly unknown[
   });
 
   let slotIndex: number = -1;
-  annotatedString = strings.join(slotMarker).replace(markedStrings, () => {
+  const sentinel = new Sentinel();
+  annotatedString = strings.join(sentinel.simple).replace(sentinel.regex, () => {
     const val = annotatedValues[++slotIndex];
     if (val.type === ValueType.Text || val.type === ValueType.Template) {
-      return `<template data-slot-${slotId}="${slotIndex}"></template>`;
+      return `<template ${sentinel.attribute}="${slotIndex}"></template>`;
     } else {
-      return val.data[2] ? `data-slot-${slotId}="${slotIndex}"` : "";
+      return val.data[2] ? `${sentinel.attribute}="${slotIndex}"` : "";
     }
   });
 
