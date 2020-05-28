@@ -11,8 +11,8 @@ export enum MetadataType {
 }
 
 export class Metadata {
-  type: MetadataType;
-  value: readonly any[];
+  readonly type: MetadataType;
+  readonly value: readonly any[];
 
   constructor(type: MetadataType, value?: readonly any[]) {
     this.type = type;
