@@ -3,32 +3,36 @@ import { attribute, event } from "./regex-patterns";
 
 const TemplateCache: WeakMap<TemplateStringsArray, Template> = new WeakMap();
 
-export enum ValueType {
+export enum MetadataType {
   Attribute = "attribute",
   Event = "event",
   Template = "template",
   Text = "text",
 }
 
-export type ValueData = [string, unknown, boolean] | Template | Template[] | string;
+export class Metadata {
+  type: MetadataType;
+  value: readonly any[];
 
-export class Value {
-  type: ValueType;
-  data: ValueData;
-
-  constructor(type: ValueType, data: ValueData) {
+  constructor(type: MetadataType, value?: readonly any[]) {
     this.type = type;
-    this.data = data;
+    this.value = value;
   }
 }
 
 export class Template {
   readonly string: string;
-  readonly values: readonly Value[];
+  readonly values: readonly unknown[];
+  readonly metadata: readonly Metadata[];
 
-  constructor(string: string, values: readonly Value[]) {
+  constructor(string: string, values: readonly unknown[], metadata: readonly Metadata[]) {
     this.string = string;
     this.values = values;
+    this.metadata = metadata;
+  }
+
+  duplicate(values: readonly unknown[]): Template {
+    return new Template(this.string, values, this.metadata);
   }
 
   createElement(): DocumentFragment {
@@ -64,44 +68,38 @@ class Sentinel {
 
 export function html(strings: TemplateStringsArray, ...values: readonly unknown[]): Template {
   if (TemplateCache.has(strings)) {
-    return TemplateCache.get(strings);
+    return TemplateCache.get(strings).duplicate(values);
   }
 
-  let annotatedString: string;
-  let annotatedValues: Value[] = [];
   const rawStrings: readonly string[] = strings.raw;
-
-  values.forEach((value, i) => {
+  let metadata: Metadata[] = values.map((value, i) => {
     let key: string;
-    let val: any;
     let str: string = strings[i];
     const isLastAttr = isOpenTagEnd(rawStrings[i + 1]) ?? true;
 
     if ((key = str.match(event)?.[1])) {
-      val = new Value(ValueType.Event, [key, value, isLastAttr]);
+      return new Metadata(MetadataType.Event, [key, isLastAttr]);
     } else if ((key = str.match(attribute)?.[1])) {
-      val = new Value(ValueType.Attribute, [key, value, isLastAttr]);
+      return new Metadata(MetadataType.Attribute, [key, isLastAttr]);
     } else if (value instanceof Template || value?.[0] instanceof Template) {
-      val = new Value(ValueType.Template, value as Template[]);
+      return new Metadata(MetadataType.Template);
     } else {
-      val = new Value(ValueType.Text, String(value));
+      return new Metadata(MetadataType.Text);
     }
-
-    annotatedValues.push(val);
   });
 
   let slotIndex: number = -1;
   const sentinel = new Sentinel();
-  annotatedString = strings.join(sentinel.simple).replace(sentinel.regex, () => {
-    const val = annotatedValues[++slotIndex];
-    if (val.type === ValueType.Text || val.type === ValueType.Template) {
+  let string = strings.join(sentinel.simple).replace(sentinel.regex, () => {
+    const meta = metadata[++slotIndex];
+    if (meta.type === MetadataType.Text || meta.type === MetadataType.Template) {
       return `<template ${sentinel.attribute}="${slotIndex}"></template>`;
     } else {
-      return val.data[2] ? `${sentinel.attribute}="${slotIndex}"` : "";
+      return meta.value[1] ? `${sentinel.attribute}="${slotIndex}"` : "";
     }
   });
 
-  const template = new Template(annotatedString, annotatedValues);
+  const template = new Template(string, values, metadata);
   TemplateCache.set(strings, template);
 
   return template;
@@ -112,5 +110,5 @@ export function render(template: Template, container: Element) {
     throw new Error(`Container cannot be null.`);
   }
 
-  console.log(template.string, template.values);
+  console.log(template.string, template.values, template.metadata);
 }
