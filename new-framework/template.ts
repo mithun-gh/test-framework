@@ -1,6 +1,8 @@
 import { isOpenTagEnd } from "./utils";
 import { attribute, event } from "./regex-patterns";
 
+const TemplateCache: WeakMap<TemplateStringsArray, Template> = new WeakMap();
+
 export enum ValueType {
   Attribute = "attribute",
   Event = "event",
@@ -61,6 +63,10 @@ class Sentinel {
 }
 
 export function html(strings: TemplateStringsArray, ...values: readonly unknown[]): Template {
+  if (TemplateCache.has(strings)) {
+    return TemplateCache.get(strings);
+  }
+
   let annotatedString: string;
   let annotatedValues: Value[] = [];
   const rawStrings: readonly string[] = strings.raw;
@@ -95,7 +101,10 @@ export function html(strings: TemplateStringsArray, ...values: readonly unknown[
     }
   });
 
-  return new Template(annotatedString, annotatedValues);
+  const template = new Template(annotatedString, annotatedValues);
+  TemplateCache.set(strings, template);
+
+  return template;
 }
 
 export function render(template: Template, container: Element) {
