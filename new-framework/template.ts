@@ -24,15 +24,22 @@ export class Template {
   readonly string: string;
   readonly values: readonly unknown[];
   readonly metadata: readonly Metadata[];
+  readonly sentinel: Sentinel;
 
-  constructor(string: string, values: readonly unknown[], metadata: readonly Metadata[]) {
+  constructor(
+    string: string,
+    values: readonly unknown[],
+    metadata: readonly Metadata[],
+    sentinel: Sentinel
+  ) {
     this.string = string;
     this.values = values;
     this.metadata = metadata;
+    this.sentinel = sentinel;
   }
 
   duplicate(values: readonly unknown[]): Template {
-    return new Template(this.string, values, this.metadata);
+    return new Template(this.string, values, this.metadata, this.sentinel);
   }
 
   createElement(): DocumentFragment {
@@ -63,6 +70,10 @@ class Sentinel {
 
   get regex() {
     return new RegExp(`[a-z]+=\\${this.simple}|\\${this.simple}`, "gi");
+  }
+
+  get property() {
+    return `slot-${this.id}`;
   }
 }
 
@@ -99,7 +110,7 @@ export function html(strings: TemplateStringsArray, ...values: readonly unknown[
     }
   });
 
-  const template = new Template(string, values, metadata);
+  const template = new Template(string, values, metadata, sentinel);
   TemplateCache.set(strings, template);
 
   return template;
@@ -116,13 +127,19 @@ export class Slot {
   readonly node: Node;
   readonly type: SlotType;
   readonly value: unknown;
+
+  constructor(node: Node, type: SlotType, value: unknown) {
+    this.node = node;
+    this.type = type;
+    this.value = value;
+  }
 }
 
 export class Fragment {
   readonly template: Template;
-  readonly slots: readonly Slot[];
 
   private container: Element;
+  private slots: Slot[] = [];
 
   constructor(template: Template) {
     this.template = template;
@@ -140,8 +157,52 @@ export class Fragment {
 
     const node = this.template.createElement();
     this.container.appendChild(node);
+    this.applyValues();
+  }
 
-    this.template.values.forEach((value) => {});
+  private applyValues() {
+    let valueIndex = 0;
+    const selector = this.template.sentinel.selector;
+    const property = this.template.sentinel.property;
+    this.container.querySelectorAll(selector).forEach((element: HTMLElement) => {
+      const limit = Number(element.dataset[property]);
+      while (valueIndex <= limit) {
+        const value = this.template.values[valueIndex];
+        const meta = this.template.metadata[valueIndex];
+        this.slots.push(this.createSlot(value, meta, element));
+        valueIndex++;
+      }
+    });
+  }
+
+  private createSlot(value: unknown, metadata: Metadata, element: HTMLElement): Slot {
+    if (metadata.type === MetadataType.Text) {
+      const text: Text = document.createTextNode("");
+      element.replaceWith(text);
+      text.data = value as string;
+      return new Slot(text, SlotType.Text, value);
+    }
+
+    if (metadata.type === MetadataType.Attribute) {
+      const [key] = metadata.value;
+      element[this.preprocessKey(key)] = value;
+      element.removeAttribute(this.template.sentinel.attribute);
+      return new Slot(element, SlotType.Attribute, value);
+    }
+
+    if (metadata.type === MetadataType.Event) {
+      const [key] = metadata.value;
+      element.addEventListener(key, value as EventListenerOrEventListenerObject);
+      element.removeAttribute(this.template.sentinel.attribute);
+      return new Slot(element, SlotType.Event, value);
+    }
+  }
+
+  private preprocessKey(key: string): string {
+    if (key === "class") {
+      return "className";
+    }
+    return key;
   }
 }
 
@@ -152,5 +213,5 @@ export function render(template: Template, container: Element) {
 
   new Fragment(template).attach(container);
 
-  console.log(template.values, template.metadata);
+  console.log(template.string);
 }
