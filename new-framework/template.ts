@@ -12,9 +12,9 @@ export enum MetadataType {
 
 export class Metadata {
   readonly type: MetadataType;
-  readonly value: string;
+  readonly value: readonly any[];
 
-  constructor(type: MetadataType, value?: string) {
+  constructor(type: MetadataType, value?: readonly any[]) {
     this.type = type;
     this.value = value;
   }
@@ -78,9 +78,9 @@ export function html(strings: TemplateStringsArray, ...values: readonly unknown[
     const isLastAttr = isOpenTagEnd(rawStrings[i + 1]) ?? true;
 
     if ((key = str.match(event)?.[1])) {
-      return new Metadata(MetadataType.Event, key);
+      return new Metadata(MetadataType.Event, [key, isLastAttr]);
     } else if ((key = str.match(attribute)?.[1])) {
-      return new Metadata(MetadataType.Attribute, key);
+      return new Metadata(MetadataType.Attribute, [key, isLastAttr]);
     } else if (value instanceof Template || value?.[0] instanceof Template) {
       return new Metadata(MetadataType.Template);
     } else {
