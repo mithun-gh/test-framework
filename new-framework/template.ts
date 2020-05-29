@@ -12,9 +12,9 @@ export enum MetadataType {
 
 export class Metadata {
   readonly type: MetadataType;
-  readonly value: readonly any[];
+  readonly value: string;
 
-  constructor(type: MetadataType, value?: readonly any[]) {
+  constructor(type: MetadataType, value?: string) {
     this.type = type;
     this.value = value;
   }
@@ -78,9 +78,9 @@ export function html(strings: TemplateStringsArray, ...values: readonly unknown[
     const isLastAttr = isOpenTagEnd(rawStrings[i + 1]) ?? true;
 
     if ((key = str.match(event)?.[1])) {
-      return new Metadata(MetadataType.Event, [key, isLastAttr]);
+      return new Metadata(MetadataType.Event, key);
     } else if ((key = str.match(attribute)?.[1])) {
-      return new Metadata(MetadataType.Attribute, [key, isLastAttr]);
+      return new Metadata(MetadataType.Attribute, key);
     } else if (value instanceof Template || value?.[0] instanceof Template) {
       return new Metadata(MetadataType.Template);
     } else {
@@ -105,10 +105,52 @@ export function html(strings: TemplateStringsArray, ...values: readonly unknown[
   return template;
 }
 
+export enum SlotType {
+  Attribute = "attribute",
+  Event = "event",
+  Fragment = "fragment",
+  Text = "text",
+}
+
+export class Slot {
+  readonly node: Node;
+  readonly type: SlotType;
+  readonly value: unknown;
+}
+
+export class Fragment {
+  readonly template: Template;
+  readonly slots: readonly Slot[];
+
+  private container: Element;
+
+  constructor(template: Template) {
+    this.template = template;
+  }
+
+  attach(container: Element) {
+    if (this.container !== undefined) {
+      return;
+    }
+
+    this.container = container;
+    while (this.container.firstChild) {
+      this.container.firstChild.remove();
+    }
+
+    const node = this.template.createElement();
+    this.container.appendChild(node);
+
+    this.template.values.forEach((value) => {});
+  }
+}
+
 export function render(template: Template, container: Element) {
   if (container === null) {
     throw new Error(`Container cannot be null.`);
   }
 
-  console.log(template.string, template.values, template.metadata);
+  new Fragment(template).attach(container);
+
+  console.log(template.values, template.metadata);
 }
