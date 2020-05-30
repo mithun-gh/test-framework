@@ -138,14 +138,14 @@ export class Slot {
 export class Fragment {
   readonly template: Template;
 
-  private container: Element;
+  private container: HTMLElement;
   private slots: Slot[] = [];
 
   constructor(template: Template) {
     this.template = template;
   }
 
-  attach(container: Element) {
+  attach(container: HTMLElement) {
     if (this.container !== undefined) {
       return;
     }
@@ -155,6 +155,13 @@ export class Fragment {
       this.container.firstChild.remove();
     }
 
+    const node = this.template.createElement();
+    this.container.appendChild(node);
+    this.applyValues();
+  }
+
+  append(container: HTMLElement): void {
+    this.container = container;
     const node = this.template.createElement();
     this.container.appendChild(node);
     this.applyValues();
@@ -196,6 +203,14 @@ export class Fragment {
       element.removeAttribute(this.template.sentinel.attribute);
       return new Slot(element, SlotType.Event, value);
     }
+
+    if (metadata.type === MetadataType.Template) {
+      const templates = (Array.isArray(value) ? value : [value]) as Template[];
+      templates.forEach((template: Template) => {
+        new Fragment(template).append(element.parentNode as HTMLElement);
+      });
+      element.remove();
+    }
   }
 
   private preprocessKey(key: string): string {
@@ -206,12 +221,12 @@ export class Fragment {
   }
 }
 
-export function render(template: Template, container: Element) {
+export function render(template: Template, container: HTMLElement) {
   if (container === null) {
     throw new Error(`Container cannot be null.`);
   }
 
   new Fragment(template).attach(container);
 
-  console.log(template.string);
+  console.log(template.values);
 }
