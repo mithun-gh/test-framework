@@ -7,7 +7,9 @@ import { Sentinel } from "./sentinel";
 
 export function html(strings: TemplateStringsArray, ...values: readonly unknown[]): Template {
   if (TemplateCache.has(strings)) {
-    return TemplateCache.get(strings).duplicate(values);
+    const template = TemplateCache.get(strings);
+    const newValues = transformValues(values, template.metadata);
+    return TemplateCache.get(strings).updateValues(newValues);
   }
 
   let metadata: Metadata[] = values.map((value, i) => {
@@ -22,7 +24,7 @@ export function html(strings: TemplateStringsArray, ...values: readonly unknown[
     } else if (value instanceof Template) {
       return new Metadata(MetadataType.Template);
     } else if (Array.isArray(value)) {
-      return new Metadata(MetadataType.TemplateArray, value);
+      return new Metadata(MetadataType.Template, [i]);
     } else {
       return new Metadata(MetadataType.Text);
     }
@@ -39,8 +41,36 @@ export function html(strings: TemplateStringsArray, ...values: readonly unknown[
     }
   });
 
-  const template = new Template(string, values, metadata, sentinel);
+  const newValues = transformValues(values, metadata);
+  const template = new Template(string, newValues, metadata, sentinel);
+
   TemplateCache.set(strings, template);
 
   return template;
+}
+
+function transformValues(values: readonly unknown[], metadata: readonly Metadata[]): unknown[] {
+  const newValues = [...values];
+  metadata
+    .filter((meta) => meta.type === MetadataType.Template && meta.value.length > 0)
+    .forEach((meta) => {
+      let subString = "";
+      const subMeta = [];
+      const subValues = [];
+      const subSentinel = new Sentinel();
+      const templateIndex = meta.value[0];
+      const templateArray = newValues[templateIndex] as unknown[];
+
+      templateArray.forEach((value) => {
+        if (value instanceof Template) {
+          subString += value.string.replace(value.sentinel.attribute, subSentinel.attribute);
+          subValues.push(...value.values);
+          subMeta.push(...value.metadata);
+        } else {
+          subString += String(value);
+        }
+      });
+      newValues.splice(templateIndex, 1, new Template(subString, subValues, subMeta, subSentinel));
+    });
+  return newValues;
 }

@@ -2,8 +2,9 @@ import { Metadata } from "./metadata";
 import { Sentinel } from "./sentinel";
 
 export class Template {
+  values: readonly unknown[];
+
   readonly string: string;
-  readonly values: readonly unknown[];
   readonly metadata: readonly Metadata[];
   readonly sentinel: Sentinel;
 
@@ -21,6 +22,11 @@ export class Template {
 
   duplicate(values: readonly unknown[]): Template {
     return new Template(this.string, values, this.metadata, this.sentinel);
+  }
+
+  updateValues(newValues: readonly unknown[]): Template {
+    this.values = newValues;
+    return this;
   }
 
   createElement(): DocumentFragment {
