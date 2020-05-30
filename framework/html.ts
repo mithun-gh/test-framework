@@ -10,12 +10,11 @@ export function html(strings: TemplateStringsArray, ...values: readonly unknown[
     return TemplateCache.get(strings).duplicate(values);
   }
 
-  const rawStrings: readonly string[] = strings.raw;
   let metadata: Metadata[] = values.map((value, i) => {
     let key: string;
     let str: string = strings[i];
+    const rawStrings: readonly string[] = strings.raw;
     const isLastAttr = isOpenTagEnd(rawStrings[i + 1]) ?? true;
-
     if ((key = str.match(event)?.[1])) {
       return new Metadata(MetadataType.Event, [key, isLastAttr]);
     } else if ((key = str.match(attribute)?.[1])) {
