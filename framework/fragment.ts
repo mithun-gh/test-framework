@@ -5,7 +5,6 @@ import { Metadata, MetadataType } from "./metadata";
 export class Fragment {
   readonly template: Template;
 
-  private container: HTMLElement;
   private slots: Slot[] = [];
 
   constructor(template: Template) {
@@ -20,20 +19,22 @@ export class Fragment {
   }
 
   appendInto(container: HTMLElement) {
-    if (this.container !== undefined) {
-      return;
-    }
-    this.container = container;
     const node = this.template.createElement();
-    this.container.appendChild(node);
-    this.applyValues();
+    this.applyValues(node);
+    container.appendChild(node);
   }
 
-  private applyValues() {
+  replace(element: HTMLElement) {
+    const node = this.template.createElement();
+    this.applyValues(node);
+    element.replaceWith(node);
+  }
+
+  private applyValues(docFragment: DocumentFragment) {
     let valueIndex = 0;
     const selector = this.template.sentinel.selector;
     const property = this.template.sentinel.property;
-    this.container.querySelectorAll(selector).forEach((element: HTMLElement) => {
+    docFragment.querySelectorAll(selector).forEach((element: HTMLElement) => {
       const limit = Number(element.dataset[property]);
       while (valueIndex <= limit) {
         const value = this.template.values[valueIndex];
@@ -67,11 +68,20 @@ export class Fragment {
     }
 
     if (metadata.type === MetadataType.Template) {
-      const templates = (Array.isArray(value) ? value : [value]) as Template[];
+      if (!Array.isArray(value)) {
+        const fragment = new Fragment(value as Template);
+        fragment.replace(element);
+        return new Slot(null, SlotType.Fragment, fragment);
+      }
+      const fragments: Fragment[] = [];
+      const templates = value as Template[];
       templates.forEach((template: Template) => {
-        new Fragment(template).appendInto(element.parentNode as HTMLElement);
+        const fragment = new Fragment(template);
+        fragment.appendInto(element.parentNode as HTMLElement);
+        fragments.push(fragment);
       });
       element.remove();
+      return new Slot(null, SlotType.Fragment, fragments);
     }
   }
 
