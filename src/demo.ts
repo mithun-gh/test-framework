@@ -1,4 +1,4 @@
-import { html, render } from "../old-framework/template";
+import { html, render } from "../old/old-framework/template";
 
 /*
 
