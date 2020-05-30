@@ -74,20 +74,9 @@ export class Fragment {
     }
 
     if (metadata.type === MetadataType.Template) {
-      if (!Array.isArray(value)) {
-        const fragment = new Fragment(value as Template);
-        fragment.replace(element);
-        return new Slot(null, SlotType.Fragment, fragment);
-      }
-      const fragments: Fragment[] = [];
-      const templates = value as Template[];
-      templates.forEach((template: Template) => {
-        const fragment = new Fragment(template);
-        fragment.prependTo(element);
-        fragments.push(fragment);
-      });
-      element.remove();
-      return new Slot(null, SlotType.Fragment, fragments);
+      const fragment = new Fragment(value as Template);
+      fragment.replace(element);
+      return new Slot(null, SlotType.Fragment, fragment);
     }
   }
 
