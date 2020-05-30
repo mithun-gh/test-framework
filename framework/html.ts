@@ -22,7 +22,7 @@ export function html(strings: TemplateStringsArray, ...values: readonly unknown[
     } else if (value instanceof Template) {
       return new Metadata(MetadataType.Template);
     } else if (Array.isArray(value)) {
-      return new Metadata(MetadataType.TemplateArray);
+      return new Metadata(MetadataType.TemplateArray, value);
     } else {
       return new Metadata(MetadataType.Text);
     }
