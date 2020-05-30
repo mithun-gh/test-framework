@@ -30,10 +30,10 @@ export function html(strings: TemplateStringsArray, ...values: readonly unknown[
   const sentinel = new Sentinel();
   let string = strings.join(sentinel.simple).replace(sentinel.regex, () => {
     const meta = metadata[++slotIndex];
-    if (meta.type === MetadataType.Text || meta.type === MetadataType.Template) {
-      return `<template ${sentinel.attribute}="${slotIndex}"></template>`;
-    } else {
+    if (meta.type === MetadataType.Attribute || meta.type === MetadataType.Event) {
       return meta.value[1] ? `${sentinel.attribute}="${slotIndex}"` : "";
+    } else {
+      return `<template ${sentinel.attribute}="${slotIndex}"></template>`;
     }
   });
 
