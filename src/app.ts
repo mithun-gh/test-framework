@@ -1,5 +1,5 @@
-import { html, render } from "../framework/template";
-import { Component, Property } from "../framework/component";
+import { html, render } from "../old-framework/template";
+import { Component, Property } from "../old-framework/component";
 
 @Component("my-greeter")
 class MyGreeter {
