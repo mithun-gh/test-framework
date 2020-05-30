@@ -24,6 +24,12 @@ export class Fragment {
     container.appendChild(node);
   }
 
+  prependTo(element: HTMLElement) {
+    const node = this.template.createElement();
+    this.applyValues(node);
+    element.parentNode.insertBefore(node, element);
+  }
+
   replace(element: HTMLElement) {
     const node = this.template.createElement();
     this.applyValues(node);
@@ -77,7 +83,7 @@ export class Fragment {
       const templates = value as Template[];
       templates.forEach((template: Template) => {
         const fragment = new Fragment(template);
-        fragment.appendInto(element.parentNode as HTMLElement);
+        fragment.prependTo(element);
         fragments.push(fragment);
       });
       element.remove();
