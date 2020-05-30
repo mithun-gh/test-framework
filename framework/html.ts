@@ -19,8 +19,10 @@ export function html(strings: TemplateStringsArray, ...values: readonly unknown[
       return new Metadata(MetadataType.Event, [key, isLastAttr]);
     } else if ((key = str.match(attribute)?.[1])) {
       return new Metadata(MetadataType.Attribute, [key, isLastAttr]);
-    } else if (value instanceof Template || value?.[0] instanceof Template) {
+    } else if (value instanceof Template) {
       return new Metadata(MetadataType.Template);
+    } else if (Array.isArray(value)) {
+      return new Metadata(MetadataType.TemplateArray);
     } else {
       return new Metadata(MetadataType.Text);
     }
