@@ -6,7 +6,7 @@ export function render(template: Template, container: HTMLElement) {
     throw new Error(`Container cannot be null.`);
   }
 
-  new Fragment(template).attach(container);
+  new Fragment(template).attachTo(container);
 
   console.log(template.values);
 }

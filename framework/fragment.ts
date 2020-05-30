@@ -12,22 +12,17 @@ export class Fragment {
     this.template = template;
   }
 
-  attach(container: HTMLElement) {
+  attachTo(container: HTMLElement) {
+    while (container.firstChild) {
+      container.firstChild.remove();
+    }
+    this.appendInto(container);
+  }
+
+  appendInto(container: HTMLElement) {
     if (this.container !== undefined) {
       return;
     }
-
-    this.container = container;
-    while (this.container.firstChild) {
-      this.container.firstChild.remove();
-    }
-
-    const node = this.template.createElement();
-    this.container.appendChild(node);
-    this.applyValues();
-  }
-
-  append(container: HTMLElement): void {
     this.container = container;
     const node = this.template.createElement();
     this.container.appendChild(node);
@@ -74,7 +69,7 @@ export class Fragment {
     if (metadata.type === MetadataType.Template) {
       const templates = (Array.isArray(value) ? value : [value]) as Template[];
       templates.forEach((template: Template) => {
-        new Fragment(template).append(element.parentNode as HTMLElement);
+        new Fragment(template).appendInto(element.parentNode as HTMLElement);
       });
       element.remove();
     }
