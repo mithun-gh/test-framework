@@ -1,12 +1,12 @@
 import { Metadata, MetadataType } from "./metadata";
 import { Sentinel } from "./sentinel";
-import { isOpenTagEnd, squashStringArray } from "./utils";
+import { isOpenTagEnd, squash } from "./utils";
 import { attribute, event } from "./regex";
 import { html } from "./html";
 
 export class Template {
   strings: TemplateStringsArray;
-  values: unknown[];
+  values: unknown[] = [];
 
   readonly metadata: readonly Metadata[];
   readonly sentinel: Sentinel;
@@ -18,9 +18,9 @@ export class Template {
     this.values = this.transformValues(values);
   }
 
-  updateValues(values: unknown[]): Template {
+  update(strings: TemplateStringsArray, values: unknown[]) {
     this.values = this.transformValues(values);
-    return this;
+    this.strings = squash(this.strings.raw, strings);
   }
 
   createElement(): DocumentFragment {
@@ -30,11 +30,12 @@ export class Template {
   }
 
   transformValues(values: unknown[]): unknown[] {
-    const newValues = [...values];
+    const newValues = [...this.values, ...values];
+
     this.metadata
       .filter((meta) => meta.type === MetadataType.Template && meta.value.length > 0)
       .forEach((meta) => {
-        let subStrings = [];
+        let subStrings: TemplateStringsArray = { raw: [], ...[] };
         let subValues = [];
 
         const templateIndex = meta.value[0];
@@ -44,28 +45,25 @@ export class Template {
         templateArray.forEach((value) => {
           if (value instanceof Template) {
             if (subString.length > 0) {
-              const firstStr = subString + value.strings.raw[0];
-              subStrings.push(firstStr, ...value.strings.raw.slice(1));
+              subStrings = squash([...subStrings.raw, subString], value.strings.raw);
               subString = "";
             } else {
-              subStrings.push(...value.strings.raw);
+              subStrings = squash(subStrings.raw, value.strings.raw);
             }
-            subValues.push(...value.values);
-          } else {
+            subValues = value.values;
+          } else if (value != null) {
             subString += String(value);
           }
         });
 
         if (subString.length > 0) {
-          const lastStr = subStrings[subStrings.length - 1] + subString;
-          subStrings.splice(subStrings.length - 1, 1, lastStr);
+          subStrings = squash(subStrings.raw, [subString]);
         }
 
-        subStrings = squashStringArray(subStrings);
-        const template = html({ raw: subStrings, ...subStrings }, ...subValues);
-
+        const template = html(subStrings, ...subValues);
         newValues.splice(templateIndex, 1, template);
       });
+
     return newValues;
   }
 
