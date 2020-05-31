@@ -14,9 +14,9 @@ export function html(strings: TemplateStringsArray, ...values: readonly unknown[
 
   let metadata: Metadata[] = values.map((value, i) => {
     let key: string;
-    let str: string = strings[i];
-    const rawStrings: readonly string[] = strings.raw;
-    const isLastAttr = isOpenTagEnd(rawStrings[i + 1]) ?? true;
+    let str: string = strings.raw[i];
+    const nextStr: string = strings.raw[i + 1];
+    const isLastAttr = isOpenTagEnd(nextStr) ?? true;
     if ((key = str.match(event)?.[1])) {
       return new Metadata(MetadataType.Event, [key, isLastAttr]);
     } else if ((key = str.match(attribute)?.[1])) {
@@ -32,7 +32,7 @@ export function html(strings: TemplateStringsArray, ...values: readonly unknown[
 
   let slotIndex: number = -1;
   const sentinel = new Sentinel();
-  let string = strings.join(sentinel.simple).replace(sentinel.regex, () => {
+  let string = strings.raw.join(sentinel.simple).replace(sentinel.regex, () => {
     const meta = metadata[++slotIndex];
     if (meta.type === MetadataType.Attribute || meta.type === MetadataType.Event) {
       return meta.value[1] ? `${sentinel.attribute}="${slotIndex}"` : "";
