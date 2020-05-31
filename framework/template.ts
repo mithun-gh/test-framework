@@ -1,6 +1,6 @@
 import { Metadata, MetadataType } from "./metadata";
 import { Sentinel } from "./sentinel";
-import { isOpenTagEnd } from "./utils";
+import { isOpenTagEnd, squashStringArray } from "./utils";
 import { attribute, event } from "./regex";
 import { html } from "./html";
 
@@ -34,8 +34,36 @@ export class Template {
     this.metadata
       .filter((meta) => meta.type === MetadataType.Template && meta.value.length > 0)
       .forEach((meta) => {
-        const template = html``;
+        let subStrings = [];
+        let subValues = [];
+
         const templateIndex = meta.value[0];
+        const templateArray = newValues[templateIndex] as unknown[];
+
+        let subString = "";
+        templateArray.forEach((value) => {
+          if (value instanceof Template) {
+            if (subString.length > 0) {
+              const firstStr = subString + value.strings.raw[0];
+              subStrings.push(firstStr, ...value.strings.raw.slice(1));
+              subString = "";
+            } else {
+              subStrings.push(...value.strings.raw);
+            }
+            subValues.push(...value.values);
+          } else {
+            subString += String(value);
+          }
+        });
+
+        if (subString.length > 0) {
+          const lastStr = subStrings[subStrings.length - 1] + subString;
+          subStrings.splice(subStrings.length - 1, 1, lastStr);
+        }
+
+        subStrings = squashStringArray(subStrings);
+        const template = html({ raw: subStrings, ...subStrings }, ...subValues);
+
         newValues.splice(templateIndex, 1, template);
       });
     return newValues;
