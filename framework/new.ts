@@ -2,7 +2,6 @@ import { Sentinel } from "./sentinel";
 import { Metadata, MetadataType } from "./metadata";
 import { isOpenTagEnd } from "./utils";
 import { attribute, event } from "./regex";
-import { Slot, SlotType } from "./slot";
 
 export const fragments: WeakMap<TemplateStringsArray, Fragment> = new WeakMap();
 
@@ -15,8 +14,24 @@ export class Fragment {
     this.template = template;
   }
 
-  update(values: readonly unknown[]) {
-    this.template.values = values;
+  updateSlot(index: number, newValue: unknown) {
+    const slot = this.slots[index];
+    const metadata = this.template.metadata[index];
+
+    if (metadata.type === MetadataType.Text) {
+      const node = slot.node as Text;
+      node.data = String(newValue);
+    }
+  }
+
+  update(newValues: readonly unknown[]) {
+    this.template.values.forEach((oldValue, i) => {
+      const newValue = newValues[i];
+      if (newValue !== oldValue) {
+        this.updateSlot(i, newValue);
+      }
+    });
+    this.template.values = newValues;
   }
 
   attachTo(container: HTMLElement) {
@@ -67,27 +82,27 @@ export class Fragment {
       const text: Text = document.createTextNode("");
       element.replaceWith(text);
       text.data = value as string;
-      return new Slot(text, SlotType.Text, value);
+      return new Slot(text, SlotType.Text);
     }
 
     if (metadata.type === MetadataType.Attribute) {
       const [key] = metadata.value;
       element[this.preprocessKey(key)] = value;
       element.removeAttribute(this.template.sentinel.attribute);
-      return new Slot(element, SlotType.Attribute, value);
+      return new Slot(element, SlotType.Attribute);
     }
 
     if (metadata.type === MetadataType.Event) {
       const [key] = metadata.value;
       element.addEventListener(key, value as EventListenerOrEventListenerObject);
       element.removeAttribute(this.template.sentinel.attribute);
-      return new Slot(element, SlotType.Event, value);
+      return new Slot(element, SlotType.Event);
     }
 
     if (metadata.type === MetadataType.Template) {
       const fragment = new Fragment(value as Template);
       fragment.replace(element);
-      return new Slot(null, SlotType.Fragment, fragment);
+      return new Slot(null, SlotType.Fragment);
     }
   }
 
@@ -96,6 +111,23 @@ export class Fragment {
       return "className";
     }
     return key;
+  }
+}
+
+export enum SlotType {
+  Attribute = "attribute",
+  Event = "event",
+  Fragment = "fragment",
+  Text = "text",
+}
+
+export class Slot {
+  readonly node: Node;
+  readonly type: SlotType;
+
+  constructor(node: Node, type: SlotType) {
+    this.node = node;
+    this.type = type;
   }
 }
 
