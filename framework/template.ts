@@ -90,7 +90,7 @@ export class Template {
   getHtml(): string {
     let slotIndex: number = -1;
     const sentinel = this.sentinel;
-    return this.strings.raw.join(sentinel.simple).replace(sentinel.regex, () => {
+    return this.strings.raw.join(sentinel.marker).replace(sentinel.regex, () => {
       const meta = this.metadata[++slotIndex];
       if (meta.type === MetadataType.Attribute || meta.type === MetadataType.Event) {
         return meta.value[1] ? `${sentinel.attribute}="${slotIndex}"` : "";

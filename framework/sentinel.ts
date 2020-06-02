@@ -5,7 +5,7 @@ export class Sentinel {
     this.id = Math.ceil(Math.random() * Number.MAX_SAFE_INTEGER);
   }
 
-  get simple() {
+  get marker() {
     return `{${this.id}}`;
   }
 
@@ -18,7 +18,7 @@ export class Sentinel {
   }
 
   get regex() {
-    return new RegExp(`[a-z]+=\\${this.simple}|\\${this.simple}`, "gi");
+    return new RegExp(`[a-z]+=\\${this.marker}|\\${this.marker}`, "gi");
   }
 
   get property() {
