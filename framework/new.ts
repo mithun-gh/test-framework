@@ -2,7 +2,7 @@ import { Sentinel } from "./sentinel";
 import { Metadata, MetadataType } from "./metadata";
 import { isOpenTagEnd } from "./utils";
 import { attribute, event } from "./regex";
-import { Slot } from "./slot";
+import { Slot, SlotType } from "./slot";
 
 export const fragments: WeakMap<TemplateStringsArray, Fragment> = new WeakMap();
 
@@ -15,24 +15,96 @@ export class Fragment {
     this.template = template;
   }
 
-  attach(container: HTMLElement) {
+  update(values: readonly unknown[]) {
+    this.template.values = values;
+  }
+
+  attachTo(container: HTMLElement) {
     if (container == null) {
       throw new Error("Invalid container.");
     }
+    while (container.firstChild) {
+      container.firstChild.remove();
+    }
+    this.appendInto(container);
   }
 
-  update(values: readonly unknown[]) {
-    this.template.values = values;
+  appendInto(container: HTMLElement) {
+    const node = this.template.createElement();
+    this.applyValues(node);
+    container.appendChild(node);
+  }
+
+  prependTo(element: HTMLElement) {
+    const node = this.template.createElement();
+    this.applyValues(node);
+    element.parentNode.insertBefore(node, element);
+  }
+
+  replace(element: HTMLElement) {
+    const node = this.template.createElement();
+    this.applyValues(node);
+    element.replaceWith(node);
+  }
+
+  private applyValues(docFragment: DocumentFragment) {
+    let valueIndex = 0;
+    const selector = this.template.sentinel.selector;
+    const property = this.template.sentinel.property;
+    docFragment.querySelectorAll(selector).forEach((element: HTMLElement) => {
+      const limit = Number(element.dataset[property]);
+      while (valueIndex <= limit) {
+        const value = this.template.values[valueIndex];
+        const meta = this.template.metadata[valueIndex];
+        this.slots.push(this.createSlot(value, meta, element));
+        valueIndex++;
+      }
+    });
+  }
+
+  private createSlot(value: unknown, metadata: Metadata, element: HTMLElement): Slot {
+    if (metadata.type === MetadataType.Text) {
+      const text: Text = document.createTextNode("");
+      element.replaceWith(text);
+      text.data = value as string;
+      return new Slot(text, SlotType.Text, value);
+    }
+
+    if (metadata.type === MetadataType.Attribute) {
+      const [key] = metadata.value;
+      element[this.preprocessKey(key)] = value;
+      element.removeAttribute(this.template.sentinel.attribute);
+      return new Slot(element, SlotType.Attribute, value);
+    }
+
+    if (metadata.type === MetadataType.Event) {
+      const [key] = metadata.value;
+      element.addEventListener(key, value as EventListenerOrEventListenerObject);
+      element.removeAttribute(this.template.sentinel.attribute);
+      return new Slot(element, SlotType.Event, value);
+    }
+
+    if (metadata.type === MetadataType.Template) {
+      const fragment = new Fragment(value as Template);
+      fragment.replace(element);
+      return new Slot(null, SlotType.Fragment, fragment);
+    }
+  }
+
+  private preprocessKey(key: string): string {
+    if (key === "class") {
+      return "className";
+    }
+    return key;
   }
 }
 
 class Template {
   values: readonly unknown[];
   metadata: readonly Metadata[];
-
   readonly strings: TemplateStringsArray;
 
-  private sentinel: Sentinel;
+  sentinel: Sentinel;
 
   constructor(strings: TemplateStringsArray, values: unknown[]) {
     this.strings = strings;
@@ -97,7 +169,7 @@ export function render(template: Template, container: HTMLElement) {
   if (fragment === undefined) {
     fragment = new Fragment(template);
     fragments.set(template.strings, fragment);
-    fragment.attach(container);
+    fragment.attachTo(container);
   }
 
   fragment.update(template.values);
