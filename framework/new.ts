@@ -15,7 +15,7 @@ export class Fragment {
     this.template = template;
   }
 
-  mount(container: HTMLElement) {
+  attach(container: HTMLElement) {
     if (container == null) {
       throw new Error("Invalid container.");
     }
@@ -97,7 +97,7 @@ export function render(template: Template, container: HTMLElement) {
   if (fragment === undefined) {
     fragment = new Fragment(template);
     FragmentCache.set(template.strings, fragment);
-    fragment.mount(container);
+    fragment.attach(container);
   }
 
   fragment.update(template.values);
