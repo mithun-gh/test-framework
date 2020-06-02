@@ -15,7 +15,11 @@ export class Fragment {
     this.template = template;
   }
 
-  mount() {}
+  mount(container: HTMLElement) {
+    if (container == null) {
+      throw new Error("Invalid container.");
+    }
+  }
 
   update(values: readonly unknown[]) {
     this.template.values = values;
@@ -24,17 +28,15 @@ export class Fragment {
 
 class Template {
   values: readonly unknown[];
+  metadata: readonly Metadata[];
 
   readonly strings: TemplateStringsArray;
-  readonly metadata: readonly Metadata[];
 
   private sentinel: Sentinel;
 
   constructor(strings: TemplateStringsArray, values: unknown[]) {
     this.strings = strings;
     this.values = values;
-    this.sentinel = new Sentinel();
-    this.metadata = this.getMetadata();
   }
 
   createElement(): DocumentFragment {
@@ -72,14 +74,15 @@ class Template {
 
   private getHtml(): string {
     let slotIndex: number = -1;
-    const sentinel = this.sentinel;
+    this.sentinel = new Sentinel();
+    this.metadata = this.getMetadata();
 
-    return this.strings.join(sentinel.marker).replace(sentinel.regex, () => {
+    return this.strings.join(this.sentinel.marker).replace(this.sentinel.regex, () => {
       const meta = this.metadata[++slotIndex];
       if (meta.type === MetadataType.Attribute || meta.type === MetadataType.Event) {
-        return meta.value[1] ? `${sentinel.attribute}="${slotIndex}"` : "";
+        return meta.value[1] ? `${this.sentinel.attribute}="${slotIndex}"` : "";
       }
-      return `<template ${sentinel.attribute}="${slotIndex}"></template>`;
+      return `<template ${this.sentinel.attribute}="${slotIndex}"></template>`;
     });
   }
 }
@@ -89,16 +92,12 @@ export function html(strings: TemplateStringsArray, ...values: unknown[]): Templ
 }
 
 export function render(template: Template, container: HTMLElement) {
-  if (container == null) {
-    throw new Error("Invalid container.");
-  }
-
   let fragment = FragmentCache.get(template.strings);
 
   if (fragment === undefined) {
     fragment = new Fragment(template);
     FragmentCache.set(template.strings, fragment);
-    fragment.mount();
+    fragment.mount(container);
   }
 
   fragment.update(template.values);
