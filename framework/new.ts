@@ -165,12 +165,11 @@ export function html(strings: TemplateStringsArray, ...values: unknown[]): Templ
 
 export function render(template: Template, container: HTMLElement) {
   let fragment = fragments.get(template.strings);
-
-  if (fragment === undefined) {
+  if (fragment !== undefined) {
+    fragment.update(template.values);
+  } else {
     fragment = new Fragment(template);
     fragments.set(template.strings, fragment);
     fragment.attachTo(container);
   }
-
-  fragment.update(template.values);
 }
