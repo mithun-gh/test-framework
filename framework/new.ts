@@ -2,10 +2,30 @@ import { Sentinel } from "./sentinel";
 import { Metadata, MetadataType } from "./metadata";
 import { isOpenTagEnd } from "./utils";
 import { attribute, event } from "./regex";
+import { Slot } from "./slot";
+
+export const FragmentCache: WeakMap<TemplateStringsArray, Fragment> = new WeakMap();
+
+export class Fragment {
+  readonly template: Template;
+
+  private slots: Slot[] = [];
+
+  constructor(template: Template) {
+    this.template = template;
+  }
+
+  mount() {}
+
+  update(values: readonly unknown[]) {
+    this.template.values = values;
+  }
+}
 
 class Template {
+  values: readonly unknown[];
+
   readonly strings: TemplateStringsArray;
-  readonly values: readonly unknown[];
   readonly metadata: readonly Metadata[];
 
   private sentinel: Sentinel;
@@ -72,4 +92,14 @@ export function render(template: Template, container: HTMLElement) {
   if (container == null) {
     throw new Error("Invalid container.");
   }
+
+  let fragment = FragmentCache.get(template.strings);
+
+  if (fragment === undefined) {
+    fragment = new Fragment(template);
+    FragmentCache.set(template.strings, fragment);
+    fragment.mount();
+  }
+
+  fragment.update(template.values);
 }
