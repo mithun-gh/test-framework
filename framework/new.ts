@@ -4,7 +4,7 @@ import { isOpenTagEnd } from "./utils";
 import { attribute, event } from "./regex";
 import { Slot } from "./slot";
 
-export const FragmentCache: WeakMap<TemplateStringsArray, Fragment> = new WeakMap();
+export const fragments: WeakMap<TemplateStringsArray, Fragment> = new WeakMap();
 
 export class Fragment {
   readonly template: Template;
@@ -92,11 +92,11 @@ export function html(strings: TemplateStringsArray, ...values: unknown[]): Templ
 }
 
 export function render(template: Template, container: HTMLElement) {
-  let fragment = FragmentCache.get(template.strings);
+  let fragment = fragments.get(template.strings);
 
   if (fragment === undefined) {
     fragment = new Fragment(template);
-    FragmentCache.set(template.strings, fragment);
+    fragments.set(template.strings, fragment);
     fragment.attach(container);
   }
 
