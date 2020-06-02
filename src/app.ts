@@ -1,6 +1,6 @@
 import { html, render } from "../old/old-framework/template";
 import { Component, Property } from "../old/old-framework/component";
-
+/*
 @Component("my-greeter")
 class MyGreeter {
   @Property name: string = "";
@@ -40,3 +40,4 @@ const template = () => html`
 `;
 
 render(template(), document.querySelector("#root"));
+*/
