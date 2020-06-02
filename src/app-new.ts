@@ -1,4 +1,4 @@
-import { html, render } from "../framework";
+import { html, render } from "../framework/new";
 
 const state = {
   name: "Mithun",
@@ -19,17 +19,17 @@ function onkeypress(e) {
   }
 }
 
+document.getElementById("button").addEventListener("click", onclick);
+
+// const test1 = [html`<h6>ONE</h6>`, html`<h6>TWO</h6>`, html`<h6>THREE</h6>`];
+// const test2 = ["Sample text", 123007, html`<h1>Sample HTML</h1>`, true];
+
+function GetCount(count) {
+  return html`<h2>Count: ${state.count}</h2>`;
+}
+
 function App() {
-  return html`
-    <h2>Count: ${state.count}</h2>
-    <h4>Hello, ${state.name}!</h4>
-    <input type="text" onkeypress=${onkeypress} onkeyup=${() => null} />
-    <input type="button" value="Click Me!" onclick=${onclick} />
-    <p>Check the following items:</p>
-    <ul>
-      ${state.items.map((item) => html`<li>${item}</li>`)}
-    </ul>
-  `;
+  return html`<h2>Count: ${state.count}</h2>`;
 }
 
 render(App(), document.querySelector("#root-new"));
