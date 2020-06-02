@@ -4,8 +4,9 @@ import { isOpenTagEnd } from "./utils";
 import { attribute, event } from "./regex";
 
 class Template {
-  strings: TemplateStringsArray;
-  values: unknown[];
+  readonly strings: TemplateStringsArray;
+  readonly values: readonly unknown[];
+  readonly metadata: readonly Metadata[];
 
   private sentinel: Sentinel;
 
@@ -13,6 +14,13 @@ class Template {
     this.strings = strings;
     this.values = values;
     this.sentinel = new Sentinel();
+    this.metadata = this.getMetadata();
+  }
+
+  createElement(): DocumentFragment {
+    const template = document.createElement("template");
+    template.innerHTML = this.getHtml();
+    return template.content.cloneNode(true) as DocumentFragment;
   }
 
   private getMetadata(): Metadata[] {
@@ -35,20 +43,19 @@ class Template {
       }
 
       if (Array.isArray(value)) {
-        return new Metadata(MetadataType.Template, [i]);
+        return new Metadata(MetadataType.Iterator);
       }
 
       return new Metadata(MetadataType.Text);
     });
   }
 
-  getHtml(): string {
+  private getHtml(): string {
     let slotIndex: number = -1;
     const sentinel = this.sentinel;
-    const metadata = this.getMetadata();
 
-    return this.strings.raw.join(sentinel.marker).replace(sentinel.regex, () => {
-      const meta = metadata[++slotIndex];
+    return this.strings.join(sentinel.marker).replace(sentinel.regex, () => {
+      const meta = this.metadata[++slotIndex];
       if (meta.type === MetadataType.Attribute || meta.type === MetadataType.Event) {
         return meta.value[1] ? `${sentinel.attribute}="${slotIndex}"` : "";
       }
@@ -65,5 +72,4 @@ export function render(template: Template, container: HTMLElement) {
   if (container == null) {
     throw new Error("Invalid container.");
   }
-  console.log(template.getHtml());
 }
