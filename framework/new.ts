@@ -3,6 +3,7 @@ import { Metadata, MetadataType } from "./metadata";
 import { isOpenTagEnd } from "./utils";
 import { attribute, event } from "./regex";
 
+export const containers: WeakMap<Slot, HTMLElement> = new WeakMap();
 export const fragments: WeakMap<TemplateStringsArray, Fragment> = new WeakMap();
 
 export class Fragment {
@@ -14,9 +15,17 @@ export class Fragment {
     this.template = template;
   }
 
-  updateSlot(index: number, newValue: unknown) {
-    const slot = this.slots[index];
-    const oldValue = this.template.values[index];
+  updateSlot(slot: Slot, newValue: unknown, oldValue: unknown, index: number) {
+    if (slot === undefined) {
+      if (newValue instanceof Template) {
+        const container = containers.get(this.slots[index]);
+        const fragment = new Fragment(newValue);
+        fragment.appendInto(container);
+        this.slots.push(new Slot(fragment, SlotType.Fragment));
+      }
+      this.template.values.push(newValue);
+      return;
+    }
 
     if (slot.type === SlotType.Text && newValue !== oldValue) {
       const node = slot.value as Text;
@@ -31,20 +40,21 @@ export class Fragment {
 
     if (slot.type === SlotType.Iterable) {
       const slots = slot.value as Slot[];
-      const values = newValue as unknown[];
-      slots.forEach((slot, i) => {
-        if (slot.type === SlotType.Fragment) {
-          const template = values[i] as Template;
-          const fragment = slot.value as Fragment;
-          fragment.update(template.values);
-        }
+      const newValues = newValue as unknown[];
+      const oldValues = oldValue as unknown[];
+      newValues.forEach((newValue, i) => {
+        const slot = slots[i];
+        const oldValue = oldValues[i];
+        this.updateSlot(slot, newValue, oldValue, index);
       });
     }
   }
 
-  update(newValues: readonly unknown[]) {
+  update(newValues: unknown[]) {
     newValues.forEach((newValue, i) => {
-      this.updateSlot(i, newValue);
+      const slot = this.slots[i];
+      const oldValue = this.template.values[i];
+      this.updateSlot(slot, newValue, oldValue, i);
     });
     this.template.values = newValues;
   }
@@ -132,8 +142,10 @@ export class Fragment {
         }
       });
 
+      const slot = new Slot(slots, SlotType.Iterable);
+      containers.set(slot, element.parentNode as HTMLElement);
       element.remove();
-      return new Slot(slots, SlotType.Iterable);
+      return slot;
     }
   }
 
@@ -167,7 +179,7 @@ export class Slot {
 
 class Template {
   readonly strings: TemplateStringsArray;
-  values: readonly unknown[];
+  values: unknown[];
 
   #sentinel: Sentinel;
   #metadata: Metadata[] = [];
