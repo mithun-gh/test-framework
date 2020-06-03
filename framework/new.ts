@@ -133,14 +133,19 @@ export class Slot {
 
 class Template {
   values: readonly unknown[];
-  metadata: readonly Metadata[];
   readonly strings: TemplateStringsArray;
 
   sentinel: Sentinel;
 
+  private _metadata: Metadata[] = [];
+
   constructor(strings: TemplateStringsArray, values: unknown[]) {
     this.strings = strings;
     this.values = values;
+  }
+
+  get metadata() {
+    return [...this._metadata];
   }
 
   createElement(): DocumentFragment {
@@ -149,40 +154,41 @@ class Template {
     return template.content.cloneNode(true) as DocumentFragment;
   }
 
-  private getMetadata(): Metadata[] {
-    return this.values.map((value, i) => {
-      let key: string;
-      let str: string = this.strings.raw[i];
-      const nextStr: string = this.strings.raw[i + 1];
-      const isLastAttr = isOpenTagEnd(nextStr) ?? true;
+  private getMetadata(index: number): Metadata {
+    let meta = this._metadata[index];
 
-      if ((key = str.match(event)?.[1])) {
-        return new Metadata(MetadataType.Event, [key, isLastAttr]);
-      }
+    if (meta !== undefined) {
+      return meta;
+    }
 
-      if ((key = str.match(attribute)?.[1])) {
-        return new Metadata(MetadataType.Attribute, [key, isLastAttr]);
-      }
+    let key: string;
+    const value = this.values[index];
+    const string = this.strings.raw[index];
+    const nextStr: string = this.strings.raw[index + 1];
+    const isLastAttr = isOpenTagEnd(nextStr) ?? true;
 
-      if (value instanceof Template) {
-        return new Metadata(MetadataType.Template);
-      }
+    if ((key = string.match(event)?.[1])) {
+      meta = new Metadata(MetadataType.Event, [key, isLastAttr]);
+    } else if ((key = string.match(attribute)?.[1])) {
+      meta = new Metadata(MetadataType.Attribute, [key, isLastAttr]);
+    } else if (value instanceof Template) {
+      meta = new Metadata(MetadataType.Template);
+    } else if (Array.isArray(value)) {
+      meta = new Metadata(MetadataType.Iterator);
+    } else {
+      meta = new Metadata(MetadataType.Text);
+    }
 
-      if (Array.isArray(value)) {
-        return new Metadata(MetadataType.Iterator);
-      }
-
-      return new Metadata(MetadataType.Text);
-    });
+    this._metadata.push(meta);
+    return meta;
   }
 
   private getHtml(): string {
     let slotIndex: number = -1;
     this.sentinel = new Sentinel();
-    this.metadata = this.getMetadata();
 
     return this.strings.join(this.sentinel.marker).replace(this.sentinel.regex, () => {
-      const meta = this.metadata[++slotIndex];
+      const meta = this.getMetadata(++slotIndex);
       if (meta.type === MetadataType.Attribute || meta.type === MetadataType.Event) {
         return meta.value[1] ? `${this.sentinel.attribute}="${slotIndex}"` : "";
       }
