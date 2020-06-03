@@ -1,7 +1,7 @@
 export enum MetadataType {
   Attribute = "attribute",
   Event = "event",
-  Iterator = "iterator",
+  Iterable = "iterable",
   Template = "template",
   Text = "text",
 }

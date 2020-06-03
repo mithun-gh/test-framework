@@ -108,7 +108,7 @@ export class Fragment {
       return new Slot(fragment, SlotType.Fragment);
     }
 
-    if (metadata.type === MetadataType.Iterator) {
+    if (metadata.type === MetadataType.Iterable) {
       const items = value as unknown[];
       const slots: Slot[] = [];
 
@@ -121,7 +121,7 @@ export class Fragment {
       });
 
       element.remove();
-      return new Slot(slots, SlotType.Iterator);
+      return new Slot(slots, SlotType.Iterable);
     }
   }
 
@@ -139,7 +139,7 @@ export enum SlotType {
   Attribute = "attribute",
   Event = "event",
   Fragment = "fragment",
-  Iterator = "iterator",
+  Iterable = "iterable",
   Text = "text",
 }
 
@@ -199,7 +199,7 @@ class Template {
     } else if (value instanceof Template) {
       meta = new Metadata(MetadataType.Template);
     } else if (Array.isArray(value)) {
-      meta = new Metadata(MetadataType.Iterator);
+      meta = new Metadata(MetadataType.Iterable);
     } else {
       meta = new Metadata(MetadataType.Text);
     }
