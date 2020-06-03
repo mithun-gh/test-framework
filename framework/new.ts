@@ -16,24 +16,23 @@ export class Fragment {
 
   updateSlot(index: number, newValue: unknown) {
     const slot = this.slots[index];
-    if (slot.type === SlotType.Text) {
-      const node = slot.node as Text;
+    const oldValue = this.template.values[index];
+
+    if (slot.type === SlotType.Text && newValue !== oldValue) {
+      const node = slot.value as Text;
       node.data = String(newValue);
     }
 
     if (slot.type === SlotType.Fragment) {
       const template = newValue as Template;
-      const fragment = slot.node as Fragment;
+      const fragment = slot.value as Fragment;
       fragment.update(template.values);
     }
   }
 
   update(newValues: readonly unknown[]) {
-    this.template.values.forEach((oldValue, i) => {
-      const newValue = newValues[i];
-      if (newValue !== oldValue || newValue instanceof Template) {
-        this.updateSlot(i, newValue);
-      }
+    newValues.forEach((newValue, i) => {
+      this.updateSlot(i, newValue);
     });
     this.template.values = newValues;
   }
@@ -108,6 +107,21 @@ export class Fragment {
       fragment.replace(element);
       return new Slot(fragment, SlotType.Fragment);
     }
+
+    if (metadata.type === MetadataType.Iterator) {
+      const items = value as unknown[];
+      const slots: Slot[] = [];
+
+      items.forEach((item) => {
+        if (item instanceof Template) {
+          const fragment = new Fragment(item);
+          fragment.appendInto(element.parentNode as HTMLElement);
+          slots.push(new Slot(fragment, SlotType.Fragment));
+        }
+      });
+
+      return new Slot(slots, SlotType.Iterator);
+    }
   }
 
   private preprocessKey(key: string): string {
@@ -118,19 +132,22 @@ export class Fragment {
   }
 }
 
+export type SlotValue = Node | Fragment | Slot[];
+
 export enum SlotType {
   Attribute = "attribute",
   Event = "event",
   Fragment = "fragment",
+  Iterator = "iterator",
   Text = "text",
 }
 
 export class Slot {
-  readonly node: Node | Fragment;
+  readonly value: SlotValue;
   readonly type: SlotType;
 
-  constructor(node: Node | Fragment, type: SlotType) {
-    this.node = node;
+  constructor(value: SlotValue, type: SlotType) {
+    this.value = value;
     this.type = type;
   }
 }
