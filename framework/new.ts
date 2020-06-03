@@ -16,18 +16,22 @@ export class Fragment {
 
   updateSlot(index: number, newValue: unknown) {
     const slot = this.slots[index];
-    const metadata = this.template.metadata[index];
-
-    if (metadata.type === MetadataType.Text) {
+    if (slot.type === SlotType.Text) {
       const node = slot.node as Text;
       node.data = String(newValue);
+    }
+
+    if (slot.type === SlotType.Fragment) {
+      const template = newValue as Template;
+      const fragment = slot.node as Fragment;
+      fragment.update(template.values);
     }
   }
 
   update(newValues: readonly unknown[]) {
     this.template.values.forEach((oldValue, i) => {
       const newValue = newValues[i];
-      if (newValue !== oldValue) {
+      if (newValue !== oldValue || newValue instanceof Template) {
         this.updateSlot(i, newValue);
       }
     });
@@ -102,7 +106,7 @@ export class Fragment {
     if (metadata.type === MetadataType.Template) {
       const fragment = new Fragment(value as Template);
       fragment.replace(element);
-      return new Slot(null, SlotType.Fragment);
+      return new Slot(fragment, SlotType.Fragment);
     }
   }
 
@@ -122,10 +126,10 @@ export enum SlotType {
 }
 
 export class Slot {
-  readonly node: Node;
+  readonly node: Node | Fragment;
   readonly type: SlotType;
 
-  constructor(node: Node, type: SlotType) {
+  constructor(node: Node | Fragment, type: SlotType) {
     this.node = node;
     this.type = type;
   }
@@ -213,5 +217,4 @@ export function render(template: Template, container: HTMLElement) {
     fragments.set(template.strings, fragment);
     fragment.attachTo(container);
   }
-  console.log(template);
 }
