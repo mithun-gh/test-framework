@@ -28,6 +28,18 @@ export class Fragment {
       const fragment = slot.value as Fragment;
       fragment.update(template.values);
     }
+
+    if (slot.type === SlotType.Iterable) {
+      const slots = slot.value as Slot[];
+      const values = newValue as unknown[];
+      slots.forEach((slot, i) => {
+        if (slot.type === SlotType.Fragment) {
+          const template = values[i] as Template;
+          const fragment = slot.value as Fragment;
+          fragment.update(template.values);
+        }
+      });
+    }
   }
 
   update(newValues: readonly unknown[]) {
