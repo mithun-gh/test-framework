@@ -12,12 +12,9 @@ function onclick(e) {
   render(App(), document.querySelector("#root-new"));
 }
 
-function onkeypress(e) {
-  if (e.code === "Enter") {
-    state.name = e.target.value;
-    e.target.value = "";
-    render(App(), document.querySelector("#root-new"));
-  }
+function onkeyup(e) {
+  state.name = e.target.value;
+  render(App(), document.querySelector("#root-new"));
 }
 
 // const test1 = [html`<h6>ONE</h6>`, html`<h6>TWO</h6>`, html`<h6>THREE</h6>`];
@@ -30,7 +27,7 @@ function GetCount(count) {
 function App() {
   return html`
     <h4>Hello, ${state.name}!</h4>
-    <input type="text" onkeypress=${onkeypress} />
+    <input type="text" onkeyup=${onkeyup} />
     <h2>Count: ${state.count}</h2>
     <button onclick=${onclick}>Increment</button>
   `;
