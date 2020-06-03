@@ -120,6 +120,7 @@ export class Fragment {
         }
       });
 
+      element.remove();
       return new Slot(slots, SlotType.Iterator);
     }
   }
