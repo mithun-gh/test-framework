@@ -18,12 +18,13 @@ export class Fragment {
   updateSlot(slot: Slot, newValue: unknown, oldValue: unknown, index: number) {
     if (slot === undefined) {
       if (newValue instanceof Template) {
-        const container = containers.get(this.slots[index]);
+        const parentSlot = this.slots[index];
+        const container = containers.get(parentSlot);
         const fragment = new Fragment(newValue);
         fragment.appendInto(container);
-        this.slots.push(new Slot(fragment, SlotType.Fragment));
+        (parentSlot.value as Slot[]).push(new Slot(fragment, SlotType.Fragment));
       }
-      this.template.values.push(newValue);
+      (this.template.values[index] as Template[]).push(newValue as Template);
       return;
     }
 
