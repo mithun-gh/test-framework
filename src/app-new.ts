@@ -16,10 +16,9 @@ function onkeypress(e) {
   if (e.code === "Enter") {
     state.name = e.target.value;
     e.target.value = "";
+    render(App(), document.querySelector("#root-new"));
   }
 }
-
-document.getElementById("button").addEventListener("click", onclick);
 
 // const test1 = [html`<h6>ONE</h6>`, html`<h6>TWO</h6>`, html`<h6>THREE</h6>`];
 // const test2 = ["Sample text", 123007, html`<h1>Sample HTML</h1>`, true];
@@ -29,7 +28,12 @@ function GetCount(count) {
 }
 
 function App() {
-  return html`<h2>Count: ${state.count}</h2>`;
+  return html`
+    <h4>Hello, ${state.name}!</h4>
+    <input type="text" onkeypress=${onkeypress} />
+    <h2>Count: ${state.count}</h2>
+    <button onclick=${onclick}>Increment</button>
+  `;
 }
 
 render(App(), document.querySelector("#root-new"));
