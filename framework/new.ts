@@ -132,20 +132,23 @@ export class Slot {
 }
 
 class Template {
-  values: readonly unknown[];
   readonly strings: TemplateStringsArray;
+  values: readonly unknown[];
 
-  sentinel: Sentinel;
-
-  private _metadata: Metadata[] = [];
+  #sentinel: Sentinel;
+  #metadata: Metadata[] = [];
 
   constructor(strings: TemplateStringsArray, values: unknown[]) {
     this.strings = strings;
     this.values = values;
   }
 
+  get sentinel() {
+    return this.#sentinel;
+  }
+
   get metadata() {
-    return [...this._metadata];
+    return [...this.#metadata];
   }
 
   createElement(): DocumentFragment {
@@ -155,7 +158,7 @@ class Template {
   }
 
   private getMetadata(index: number): Metadata {
-    let meta = this._metadata[index];
+    let meta = this.#metadata[index];
 
     if (meta !== undefined) {
       return meta;
@@ -179,20 +182,20 @@ class Template {
       meta = new Metadata(MetadataType.Text);
     }
 
-    this._metadata.push(meta);
+    this.#metadata.push(meta);
     return meta;
   }
 
   private getHtml(): string {
     let slotIndex: number = -1;
-    this.sentinel = new Sentinel();
+    this.#sentinel = new Sentinel();
 
-    return this.strings.join(this.sentinel.marker).replace(this.sentinel.regex, () => {
+    return this.strings.join(this.#sentinel.marker).replace(this.#sentinel.regex, () => {
       const meta = this.getMetadata(++slotIndex);
       if (meta.type === MetadataType.Attribute || meta.type === MetadataType.Event) {
-        return meta.value[1] ? `${this.sentinel.attribute}="${slotIndex}"` : "";
+        return meta.value[1] ? `${this.#sentinel.attribute}="${slotIndex}"` : "";
       }
-      return `<template ${this.sentinel.attribute}="${slotIndex}"></template>`;
+      return `<template ${this.#sentinel.attribute}="${slotIndex}"></template>`;
     });
   }
 }
@@ -210,4 +213,5 @@ export function render(template: Template, container: HTMLElement) {
     fragments.set(template.strings, fragment);
     fragment.attachTo(container);
   }
+  console.log(template);
 }
