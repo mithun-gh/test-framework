@@ -1,5 +1,5 @@
-import { Template } from "./template";
 import { Fragment } from "./fragment";
+import { Slot } from "./slot";
 
-export const TemplateCache: WeakMap<TemplateStringsArray, Template> = new WeakMap();
-export const FragmentCache: WeakMap<Template, Fragment> = new WeakMap();
+export const containers: WeakMap<Slot, HTMLElement> = new WeakMap();
+export const fragments: WeakMap<TemplateStringsArray, Fragment> = new WeakMap();

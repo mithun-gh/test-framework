@@ -1,18 +1,21 @@
+import { Fragment } from "./fragment";
+
+export type SlotValue = Node | Fragment | Slot[];
+
 export enum SlotType {
   Attribute = "attribute",
   Event = "event",
   Fragment = "fragment",
+  Iterable = "iterable",
   Text = "text",
 }
 
 export class Slot {
-  readonly node: Node;
+  readonly value: SlotValue;
   readonly type: SlotType;
-  readonly value: unknown;
 
-  constructor(node: Node, type: SlotType, value: unknown) {
-    this.node = node;
-    this.type = type;
+  constructor(value: SlotValue, type: SlotType) {
     this.value = value;
+    this.type = type;
   }
 }

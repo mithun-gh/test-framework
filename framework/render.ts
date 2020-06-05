@@ -1,9 +1,14 @@
 import { Template } from "./template";
 import { Fragment } from "./fragment";
+import { fragments } from "./cache";
 
 export function render(template: Template, container: HTMLElement) {
-  if (container === null) {
-    throw new Error(`Container cannot be null.`);
+  let fragment = fragments.get(template.strings);
+  if (fragment !== undefined) {
+    fragment.update(template.values);
+  } else {
+    fragment = new Fragment(template);
+    fragments.set(template.strings, fragment);
+    fragment.attachTo(container);
   }
-  new Fragment(template).attachTo(container);
 }
