@@ -4,11 +4,13 @@ const state = {
   name: "Mithun",
   count: 3,
   items: [1, 2, 3],
+  disabled: false,
 };
 
 function onclick(e) {
   state.count += 1;
   state.items.push(state.count);
+  state.disabled = !state.disabled;
   // state.items = state.items.map((item) => item * state.count);
   render(App(), document.querySelector("#root-new"));
 }
@@ -29,7 +31,7 @@ function App() {
   return html`
     ${Greet(state.name)}
     <h4>Hello, ${state.name}!</h4>
-    <input type="text" onkeyup=${onkeyup} />
+    <input type="text" onkeyup=${onkeyup} disabled=${state.disabled} />
     <h2>Count: ${state.count}</h2>
     <button onclick=${onclick}>Increment</button>
     <ul>
