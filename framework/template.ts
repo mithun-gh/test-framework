@@ -1,6 +1,6 @@
 import { Metadata, MetadataType } from "./metadata";
 import { Sentinel } from "./sentinel";
-import { isOpenTagEnd } from "./utils";
+import { isOpenTagEnd, isEvent } from "./utils";
 import { attribute, event } from "./regex";
 
 export class Template {
@@ -42,7 +42,7 @@ export class Template {
     const nextStr: string = this.strings.raw[index + 1];
     const isLastAttr = isOpenTagEnd(nextStr) ?? true;
 
-    if ((key = string.match(event)?.[1])) {
+    if ((key = string.match(event)?.[1]) && isEvent(key)) {
       meta = new Metadata(MetadataType.Event, [key, isLastAttr]);
     } else if ((key = string.match(attribute)?.[1])) {
       meta = new Metadata(MetadataType.Attribute, [key, isLastAttr]);
