@@ -63,11 +63,12 @@ export class Template {
     this.#sentinel = new Sentinel();
 
     return this.strings.join(this.#sentinel.marker).replace(this.#sentinel.regex, () => {
-      const meta = this.getMetadata(++slotIndex);
+      const prevIndex = slotIndex++;
+      const meta = this.getMetadata(slotIndex);
       if (meta.type === MetadataType.Attribute || meta.type === MetadataType.Event) {
-        return meta.value[1] ? `${this.#sentinel.attribute}="${slotIndex}"` : "";
+        return meta.value[1] ? `${this.#sentinel.attribute}="${slotIndex}:${prevIndex}"` : "";
       }
-      return `<template ${this.#sentinel.attribute}="${slotIndex}"></template>`;
+      return `<template ${this.#sentinel.attribute}="${slotIndex}:${prevIndex}"></template>`;
     });
   }
 }

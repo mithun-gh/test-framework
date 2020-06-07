@@ -6,6 +6,7 @@ export enum SlotType {
   Attribute = "attribute",
   Event = "event",
   Fragment = "fragment",
+  Inactive = "inactive",
   Iterable = "iterable",
   Text = "text",
 }

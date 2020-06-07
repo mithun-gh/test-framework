@@ -97,7 +97,16 @@ export class Fragment {
     const selector = this.template.sentinel.selector;
     const property = this.template.sentinel.property;
     docFragment.querySelectorAll(selector).forEach((element: HTMLElement) => {
-      const limit = Number(element.dataset[property]);
+      const [index, prevIndex] = element.dataset[property].split(":");
+      const limit = Number(index);
+      const prevLimit = Number(prevIndex) + 1;
+
+      while (valueIndex < prevLimit) {
+        const meta = new Metadata(MetadataType.Comment);
+        this.slots.push(this.createSlot(null, meta, null));
+        valueIndex++;
+      }
+
       while (valueIndex <= limit) {
         const value = this.template.values[valueIndex];
         const meta = this.template.metadata[valueIndex];
@@ -108,6 +117,10 @@ export class Fragment {
   }
 
   private createSlot(value: unknown, metadata: Metadata, element: HTMLElement): Slot {
+    if (metadata.type === MetadataType.Comment) {
+      return new Slot(null, SlotType.Inactive);
+    }
+
     if (metadata.type === MetadataType.Text) {
       const text: Text = document.createTextNode("");
       element.replaceWith(text);
