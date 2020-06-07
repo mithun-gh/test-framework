@@ -1,4 +1,8 @@
-import { openTagEnd, stringLiteral } from "./regex";
+import { comment, openTagEnd, stringLiteral } from "./regex";
+
+export function normalize(str: string): string {
+  return str.replace(stringLiteral, "").replace(comment, "");
+}
 
 // str should be String.raw
 export function isOpenTagEnd(str: string): boolean {
