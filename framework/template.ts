@@ -1,7 +1,7 @@
 import { Metadata, MetadataType } from "./metadata";
 import { Sentinel } from "./sentinel";
 import { isOpenTagEnd, isEvent } from "./utils";
-import { attribute, event } from "./regex";
+import { attribute, event, comment } from "./regex";
 
 export class Template {
   readonly strings: TemplateStringsArray;
@@ -62,13 +62,16 @@ export class Template {
     let slotIndex: number = -1;
     this.#sentinel = new Sentinel();
 
-    return this.strings.join(this.#sentinel.marker).replace(this.#sentinel.regex, () => {
-      const prevIndex = slotIndex++;
-      const meta = this.getMetadata(slotIndex);
-      if (meta.type === MetadataType.Attribute || meta.type === MetadataType.Event) {
-        return meta.value[1] ? `${this.#sentinel.attribute}="${slotIndex}:${prevIndex}"` : "";
-      }
-      return `<template ${this.#sentinel.attribute}="${slotIndex}:${prevIndex}"></template>`;
-    });
+    return this.strings
+      .join(this.#sentinel.marker)
+      .replace(this.#sentinel.regex, () => {
+        const prevIndex = slotIndex++;
+        const meta = this.getMetadata(slotIndex);
+        if (meta.type === MetadataType.Attribute || meta.type === MetadataType.Event) {
+          return meta.value[1] ? `${this.#sentinel.attribute}="${slotIndex}:${prevIndex}"` : "";
+        }
+        return `<template ${this.#sentinel.attribute}="${slotIndex}:${prevIndex}"></template>`;
+      })
+      .replace(comment, "");
   }
 }
