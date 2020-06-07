@@ -30,6 +30,13 @@ export class Fragment {
       node.data = String(newValue);
     }
 
+    if (slot.type === SlotType.Attribute && newValue !== oldValue) {
+      const meta = this.template.metadata[index];
+      const [key] = meta.value;
+      const element = slot.value as HTMLElement;
+      element[this.preprocessKey(key)] = newValue;
+    }
+
     if (slot.type === SlotType.Fragment) {
       const template = newValue as Template;
       const fragment = slot.value as Fragment;
