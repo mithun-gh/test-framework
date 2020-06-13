@@ -20,8 +20,8 @@ function onkeyup(e) {
   render(App(), document.querySelector("#root-new"));
 }
 
-// const test1 = [html`<h6>ONE</h6>`, html`<h6>TWO</h6>`, html`<h6>THREE</h6>`];
-// const test2 = ["Sample text", 123007, html`<h1>Sample HTML</h1>`, true];
+const test1 = [html`<h6>ONE</h6>`, html`<h6>TWO</h6>`, html`<h6>THREE</h6>`];
+const test2 = ["One", 2, "Three", false, "Five", {}, null, undefined, "Nine", Symbol()];
 
 function Greet(name) {
   return html`<h1>Hello, ${name}!</h1>`;
@@ -30,13 +30,15 @@ function Greet(name) {
 function App() {
   return html`
     ${Greet(state.name)}
-    <h4>Hello, ${state.name}!</h4>
+    <!-- test -->
+    <p>${test2}</p>
     <input type="text" onkeyup=${onkeyup} disabled=${state.disabled} />
     <h2>Count: ${state.count}</h2>
     <button onclick=${onclick}>Increment</button>
     <ul>
       ${state.items.map((item) => html`<li>${item}</li>`)}
     </ul>
+    <h5>~~~~~~THE END~~~~~~</h5>
   `;
 }
 
