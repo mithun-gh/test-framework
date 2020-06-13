@@ -155,7 +155,7 @@ export class Fragment {
       items.forEach((item) => {
         if (item instanceof Template) {
           const fragment = new Fragment(item);
-          fragment.appendInto(element.parentNode as HTMLElement);
+          fragment.prependTo(element as HTMLElement);
           slots.push(new Slot(fragment, SlotType.Fragment));
         }
       });
