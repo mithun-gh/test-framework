@@ -21,7 +21,6 @@ export class Fragment {
         fragment.appendInto(container);
         (parentSlot.value as Slot[]).push(new Slot(fragment, SlotType.Fragment));
       }
-      (this.template.values[index] as Template[]).push(newValue as Template);
       return;
     }
 
