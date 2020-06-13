@@ -157,6 +157,11 @@ export class Fragment {
           const fragment = new Fragment(item);
           fragment.prependTo(element as HTMLElement);
           slots.push(new Slot(fragment, SlotType.Fragment));
+        } else {
+          const text: Text = document.createTextNode("");
+          text.data = item as string;
+          element.parentNode.insertBefore(text, element);
+          return new Slot(text, SlotType.Text);
         }
       });
 
