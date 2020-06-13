@@ -121,7 +121,7 @@ export class Fragment {
       return new Slot(null, SlotType.Inactive);
     }
 
-    if (metadata.type === MetadataType.Text) {
+    if (metadata.type === MetadataType.Text && value != null) {
       const text: Text = document.createTextNode("");
       element.replaceWith(text);
       text.data = String(value);
@@ -157,7 +157,7 @@ export class Fragment {
           const fragment = new Fragment(item);
           fragment.prependTo(element as HTMLElement);
           slots.push(new Slot(fragment, SlotType.Fragment));
-        } else {
+        } else if (item != null) {
           const text: Text = document.createTextNode("");
           text.data = String(item);
           element.parentNode.insertBefore(text, element);
