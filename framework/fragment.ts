@@ -124,7 +124,7 @@ export class Fragment {
     if (metadata.type === MetadataType.Text) {
       const text: Text = document.createTextNode("");
       element.replaceWith(text);
-      text.data = value as string;
+      text.data = String(value);
       return new Slot(text, SlotType.Text);
     }
 
