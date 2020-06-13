@@ -159,7 +159,7 @@ export class Fragment {
           slots.push(new Slot(fragment, SlotType.Fragment));
         } else {
           const text: Text = document.createTextNode("");
-          text.data = item as string;
+          text.data = String(item);
           element.parentNode.insertBefore(text, element);
           return new Slot(text, SlotType.Text);
         }
