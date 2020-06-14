@@ -12,57 +12,6 @@ export class Fragment {
     this.template = template;
   }
 
-  updateSlot(slot: Slot, newValue: unknown, oldValue: unknown, index: number) {
-    if (slot === undefined) {
-      if (newValue instanceof Template) {
-        const parentSlot = this.slots[index];
-        const container = containers.get(parentSlot);
-        const fragment = new Fragment(newValue);
-        fragment.appendInto(container);
-        (parentSlot.value as Slot[]).push(new Slot(fragment, SlotType.Fragment));
-      }
-      return;
-    }
-
-    if (slot.type === SlotType.Text && newValue !== oldValue) {
-      const node = slot.value as Text;
-      node.data = String(newValue);
-    }
-
-    if (slot.type === SlotType.Attribute && newValue !== oldValue) {
-      const meta = this.template.metadata[index];
-      const [key] = meta.value;
-      const element = slot.value as HTMLElement;
-      element[this.preprocessKey(key)] = newValue;
-    }
-
-    if (slot.type === SlotType.Fragment) {
-      const template = newValue as Template;
-      const fragment = slot.value as Fragment;
-      fragment.update(template.values);
-    }
-
-    if (slot.type === SlotType.Iterable) {
-      const slots = slot.value as Slot[];
-      const newValues = newValue as unknown[];
-      const oldValues = oldValue as unknown[];
-      newValues.forEach((newValue, i) => {
-        const slot = slots[i];
-        const oldValue = oldValues[i];
-        this.updateSlot(slot, newValue, oldValue, index);
-      });
-    }
-  }
-
-  update(newValues: unknown[]) {
-    newValues.forEach((newValue, i) => {
-      const slot = this.slots[i];
-      const oldValue = this.template.values[i];
-      this.updateSlot(slot, newValue, oldValue, i);
-    });
-    this.template.values = newValues;
-  }
-
   attachTo(container: HTMLElement) {
     if (container == null) {
       throw new Error("Invalid container.");
@@ -168,6 +117,57 @@ export class Fragment {
       containers.set(slot, element.parentNode as HTMLElement);
       element.remove();
       return slot;
+    }
+  }
+
+  update(newValues: unknown[]) {
+    newValues.forEach((newValue, i) => {
+      const slot = this.slots[i];
+      const oldValue = this.template.values[i];
+      this.updateSlot(slot, newValue, oldValue, i);
+    });
+    this.template.values = newValues;
+  }
+
+  private updateSlot(slot: Slot, newValue: unknown, oldValue: unknown, index: number) {
+    if (slot === undefined) {
+      if (newValue instanceof Template) {
+        const parentSlot = this.slots[index];
+        const container = containers.get(parentSlot);
+        const fragment = new Fragment(newValue);
+        fragment.appendInto(container);
+        (parentSlot.value as Slot[]).push(new Slot(fragment, SlotType.Fragment));
+      }
+      return;
+    }
+
+    if (slot.type === SlotType.Text && newValue !== oldValue) {
+      const node = slot.value as Text;
+      node.data = String(newValue);
+    }
+
+    if (slot.type === SlotType.Attribute && newValue !== oldValue) {
+      const meta = this.template.metadata[index];
+      const [key] = meta.value;
+      const element = slot.value as HTMLElement;
+      element[this.preprocessKey(key)] = newValue;
+    }
+
+    if (slot.type === SlotType.Fragment) {
+      const template = newValue as Template;
+      const fragment = slot.value as Fragment;
+      fragment.update(template.values);
+    }
+
+    if (slot.type === SlotType.Iterable) {
+      const slots = slot.value as Slot[];
+      const newValues = newValue as unknown[];
+      const oldValues = oldValue as unknown[];
+      newValues.forEach((newValue, i) => {
+        const slot = slots[i];
+        const oldValue = oldValues[i];
+        this.updateSlot(slot, newValue, oldValue, index);
+      });
     }
   }
 
