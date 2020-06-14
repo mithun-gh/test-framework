@@ -65,7 +65,7 @@ export class Template {
 
     return this.strings
       .join(this.#sentinel.marker)
-      .replace(this.#sentinel.regex, (a, b, c, d, e, f) => {
+      .replace(this.#sentinel.regex, () => {
         let string = "";
         const meta = this.getMetadata(slotIndex);
         if (meta.type === MetadataType.Attribute || meta.type === MetadataType.Event) {
