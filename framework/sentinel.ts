@@ -18,7 +18,7 @@ export class Sentinel {
   }
 
   get regex() {
-    return new RegExp(`[a-z-]+=\\${this.marker}|\\${this.marker}`, "gi");
+    return new RegExp(`[a-z-0-9]+=\\${this.marker}|\\${this.marker}`, "gi");
   }
 
   get property() {

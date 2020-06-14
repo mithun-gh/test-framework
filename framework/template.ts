@@ -59,18 +59,26 @@ export class Template {
   }
 
   private getHtml(): string {
-    let slotIndex: number = -1;
+    let slotIndex = 0;
+    let prevIndex = -1;
     this.#sentinel = new Sentinel();
 
     return this.strings
       .join(this.#sentinel.marker)
-      .replace(this.#sentinel.regex, () => {
-        const prevIndex = slotIndex++;
+      .replace(this.#sentinel.regex, (a, b, c, d, e, f) => {
+        let string = "";
         const meta = this.getMetadata(slotIndex);
         if (meta.type === MetadataType.Attribute || meta.type === MetadataType.Event) {
-          return meta.value[1] ? `${this.#sentinel.attribute}="${slotIndex}:${prevIndex}"` : "";
+          if (meta.value[1]) {
+            string = `${this.#sentinel.attribute}="${slotIndex}:${prevIndex}"`;
+            prevIndex = slotIndex;
+          }
+        } else {
+          string = `<template ${this.#sentinel.attribute}="${slotIndex}:${prevIndex}"></template>`;
+          prevIndex = slotIndex;
         }
-        return `<template ${this.#sentinel.attribute}="${slotIndex}:${prevIndex}"></template>`;
+        slotIndex = slotIndex + 1;
+        return string;
       })
       .replace(comment, "");
   }
