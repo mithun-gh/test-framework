@@ -38,6 +38,7 @@ function App() {
     <ul>
       ${state.items.map((item) => html`<li>${item}</li>`)}
     </ul>
+    <template>Hello, ${state.name}!</template>
     <h5>~~~~~~THE END~~~~~~</h5>
   `;
 }
