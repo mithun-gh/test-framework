@@ -160,7 +160,7 @@ export class Fragment {
           const text: Text = document.createTextNode("");
           text.data = String(item);
           element.parentNode.insertBefore(text, element);
-          return new Slot(text, SlotType.Text);
+          slots.push(new Slot(text, SlotType.Text));
         }
       });
 
