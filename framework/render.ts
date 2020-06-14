@@ -8,7 +8,7 @@ export function render(template: Template, container: HTMLElement) {
     fragment.update(template.values);
   } else {
     fragment = new Fragment(template);
-    fragments.set(template.strings, fragment);
     fragment.attachTo(container);
+    fragments.set(template.strings, fragment);
   }
 }
