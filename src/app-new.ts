@@ -5,6 +5,7 @@ const state = {
   count: 3,
   items: [1, 2, 3],
   disabled: false,
+  color: "red",
 };
 
 function onclick(e) {
@@ -29,6 +30,11 @@ function Greet(name) {
 
 function App() {
   return html`
+    <style>
+      div {
+        color: ${state.color};
+      }
+    </style>
     ${Greet(state.name)}
     <!-- test -->
     <p>${test2}</p>
