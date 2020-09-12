@@ -9,8 +9,12 @@ export class Sentinel {
     return `{${this.id}}`;
   }
 
+  get property() {
+    return `slot_${this.id}`;
+  }
+
   get attribute() {
-    return `data-slot-${this.id}`;
+    return `data-${this.property}`;
   }
 
   get selector() {
@@ -19,9 +23,5 @@ export class Sentinel {
 
   get regex() {
     return new RegExp(`[a-z-0-9]+=\\${this.marker}|\\${this.marker}`, "gi");
-  }
-
-  get property() {
-    return `slot-${this.id}`;
   }
 }
